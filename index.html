@@ -1,0 +1,2470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Priyanshu & Ria: The Chase 💖</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Tone.js for Romantic Sound Effects & Chimes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            box-sizing: border-box;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Quicksand', sans-serif;
+            background: #1a0b1e;
+            touch-action: none;
+        }
+        .font-romantic {
+            font-family: 'Playfair Display', serif;
+        }
+        .font-game {
+            font-family: 'Fredoka', sans-serif;
+        }
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Portrait Orientation Warning Overlay for Mobile */
+        #portrait-warning {
+            display: none;
+        }
+        @media screen and (max-width: 920px) and (orientation: portrait) {
+            #portrait-warning {
+                display: flex !important;
+            }
+        }
+
+        @keyframes rotatePhone {
+            0%, 15% { transform: rotate(0deg); }
+            50%, 85% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .animate-rotate-phone {
+            animation: rotatePhone 2.4s infinite ease-in-out;
+        }
+
+        /* Floating 3D-to-2D Character Labels */
+        .char-label {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            pointer-events: none;
+            z-index: 10;
+            transition: opacity 0.15s ease;
+            white-space: nowrap;
+        }
+
+        /* Teasing Speech Bubble Animation */
+        @keyframes popBounce {
+            0% { transform: translate(-50%, -90%) scale(0.5); opacity: 0; }
+            60% { transform: translate(-50%, -115%) scale(1.06); opacity: 1; }
+            100% { transform: translate(-50%, -110%) scale(1); opacity: 1; }
+        }
+        .speech-bubble {
+            animation: popBounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 7px 7px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 182, 193, 0.8);
+            box-shadow: 0 10px 30px rgba(219, 39, 119, 0.22);
+        }
+        .glass-dark {
+            background: rgba(24, 10, 34, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1.5px solid rgba(244, 114, 182, 0.5);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Custom Buttons */
+        .btn-love {
+            background: linear-gradient(135deg, #ec4899 0%, #e11d48 100%);
+            box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .btn-love:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(225, 29, 72, 0.65), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+        }
+        .btn-love:active {
+            transform: translateY(1px) scale(0.97);
+        }
+
+        /* Pulse Glow */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .animate-heartbeat {
+            animation: heartbeat 1.2s infinite ease-in-out;
+        }
+
+        /* Mobile Landscape Compactness */
+        @media screen and (max-height: 520px) {
+            .landscape-compact-modal {
+                padding: 0.75rem 1.25rem !important;
+                max-height: 94vh;
+                overflow-y: auto;
+            }
+            .landscape-compact-title {
+                font-size: 1.5rem !important;
+                margin-bottom: 0.2rem !important;
+            }
+            .landscape-hide {
+                display: none !important;
+            }
+        }
+
+        /* Arcade Touch Action Button Active State */
+        .arcade-btn-active {
+            transform: scale(0.88) !important;
+            filter: brightness(1.2);
+            box-shadow: 0 0 25px rgba(244, 114, 182, 0.95) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PORTRAIT MODE LOCK / ROTATE PHONE OVERLAY (Automatically shown on mobile portrait) -->
+    <div id="portrait-warning" class="fixed inset-0 z-50 bg-gradient-to-br from-rose-950 via-purple-950 to-slate-950 flex-col items-center justify-center p-6 text-center text-white">
+        <div class="w-24 h-24 rounded-3xl bg-pink-500/20 border-2 border-pink-400 flex items-center justify-center mb-5 shadow-2xl">
+            <svg class="w-14 h-14 text-pink-300 animate-rotate-phone" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+        </div>
+        <h2 class="font-game text-2xl font-bold text-pink-300 mb-2">Rotate Your Phone to Landscape 🌸</h2>
+        <p class="text-sm text-pink-100/90 max-w-xs mb-6 leading-relaxed">
+            <strong>Priyanshu & Ria's 3D Anime Chase</strong> is designed for widescreen <strong>Landscape Mode</strong> so you have full dual-thumb arcade controls!
+        </p>
+        <button id="btn-force-landscape" class="btn-love px-6 py-3.5 rounded-2xl font-game text-base text-white shadow-xl flex items-center gap-2">
+            <span>📲 Tap for Fullscreen Landscape</span>
+        </button>
+        <button id="btn-dismiss-portrait" class="mt-4 text-xs text-pink-300/70 underline">
+            Continue anyway
+        </button>
+    </div>
+
+    <!-- 3D WebGL Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- 2D Projected Name Tags & Speech Bubbles Overlay -->
+    <div id="labels-container" class="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+        <!-- Priyanshu Label -->
+        <div id="label-priyanshu" class="char-label flex flex-col items-center">
+            <div class="px-2.5 py-0.5 rounded-full bg-indigo-950/85 text-white font-game text-[11px] md:text-xs shadow-md border border-blue-400/80 flex items-center gap-1">
+                <span>🤵 Priyanshu</span>
+                <span id="priyanshu-ring-icon" class="text-xs">💍</span>
+            </div>
+        </div>
+
+        <!-- Ria Label + Dynamic Teasing Bubble -->
+        <div id="label-ria" class="char-label flex flex-col items-center">
+            <div id="ria-bubble" class="speech-bubble mb-1.5 px-3 py-1 rounded-2xl bg-white text-pink-600 font-bold text-[11px] md:text-sm shadow-xl border-2 border-pink-300 max-w-[200px] md:max-w-[240px] text-center whitespace-normal leading-tight">
+                Catch me if you can, Priyanshu! 😜🌸
+            </div>
+            <div class="px-2.5 py-0.5 rounded-full bg-pink-700/90 text-white font-game text-[11px] md:text-xs shadow-md border border-pink-300 flex items-center gap-1">
+                <span>💃 Ria</span>
+                <span class="animate-heartbeat">💖</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP HUD (Compact & Responsive for Mobile Landscape + Desktop) -->
+    <div id="hud-overlay" class="fixed top-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none hidden flex-row items-center justify-between gap-2">
+        <!-- Left: Catch / Love Closeness Progress & Distance -->
+        <div class="glass-panel rounded-2xl px-3 py-1.5 md:px-4 md:py-2.5 flex items-center gap-2.5 md:gap-3.5 pointer-events-auto">
+            <div class="text-xl md:text-3xl animate-heartbeat">💘</div>
+            <div class="w-36 sm:w-48 md:w-60">
+                <div class="flex justify-between items-center text-[10px] md:text-xs font-bold text-pink-950 mb-0.5">
+                    <span>PROPOSAL METER</span>
+                    <span id="hud-distance" class="text-pink-600 font-game">18.0m</span>
+                </div>
+                <div class="w-full h-2.5 md:h-3.5 bg-pink-100 rounded-full overflow-hidden border border-pink-300 p-0.5">
+                    <div id="hud-catch-bar" class="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-amber-400 rounded-full transition-all duration-150" style="width: 15%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Tip / Status (Hidden on small height screens to keep view clean) -->
+        <div id="hud-status-pill" class="glass-dark text-pink-100 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-lg hidden xl:flex items-center gap-2">
+            <span>🌸 Collect</span>
+            <span class="text-rose-400 font-bold">Love Hearts</span>
+            <span>& use</span>
+            <span class="text-amber-300 font-bold">Love Dash ⚡</span>
+            <span>to catch Ria!</span>
+        </div>
+
+        <!-- Right: Love Dash Stamina, Hearts, Fullscreen & Skip -->
+        <div class="glass-panel rounded-2xl px-2.5 py-1.5 md:px-4 md:py-2.5 flex items-center gap-2 md:gap-3.5 pointer-events-auto">
+            <div class="flex items-center gap-1">
+                <span class="text-base md:text-xl">🌹</span>
+                <div class="leading-none">
+                    <div class="text-[9px] font-bold uppercase text-pink-800">Hearts</div>
+                    <div id="hud-hearts" class="text-xs md:text-base font-game text-rose-600">0</div>
+                </div>
+            </div>
+
+            <div class="w-20 sm:w-28 md:w-32">
+                <div class="flex justify-between text-[9px] md:text-[11px] font-bold text-indigo-950 mb-0.5">
+                    <span>⚡ DASH</span>
+                    <span id="hud-stamina-text">100%</span>
+                </div>
+                <div class="w-full h-2 md:h-2.5 bg-indigo-100 rounded-full overflow-hidden border border-indigo-300">
+                    <div id="hud-stamina-bar" class="h-full bg-gradient-to-r from-blue-500 to-fuchsia-500 rounded-full transition-all duration-75" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <button id="btn-fullscreen" class="p-1.5 md:p-2 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-300 text-xs transition" title="Fullscreen Landscape">
+                ⛶
+            </button>
+            <button id="btn-audio-toggle" class="p-1.5 md:p-2 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-700 border border-pink-300 text-xs transition" title="Toggle Sound">
+                🔊
+            </button>
+            <button id="btn-instant-propose" class="px-2 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] md:text-xs font-bold transition" title="Trigger Proposal Cutscene Now">
+                💍 Propose Now
+            </button>
+        </div>
+    </div>
+
+    <!-- ERGONOMIC DUAL-THUMB MOBILE & DESKTOP CONTROLS OVERLAY -->
+    <div id="mobile-controls" class="fixed inset-x-0 bottom-0 p-3 md:p-6 z-20 pointer-events-none hidden flex items-end justify-between">
+        <!-- LEFT THUMB: Multi-Touch Analog Joystick -->
+        <div class="flex flex-col items-center pointer-events-auto">
+            <div id="joystick-zone" class="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full bg-slate-900/35 backdrop-blur-md border-2 border-pink-300/75 relative flex items-center justify-center shadow-[0_0_25px_rgba(236,72,153,0.35)]">
+                <!-- Directional Crosshair Markers -->
+                <span class="absolute top-1.5 text-[9px] text-pink-200/80 font-bold">▲</span>
+                <span class="absolute bottom-1.5 text-[9px] text-pink-200/80 font-bold">▼</span>
+                <span class="absolute left-2 text-[9px] text-pink-200/80 font-bold">◀</span>
+                <span class="absolute right-2 text-[9px] text-pink-200/80 font-bold">▶</span>
+                <div class="w-12 h-12 rounded-full border border-white/25 pointer-events-none"></div>
+                <!-- Movable Thumb Stick -->
+                <div id="joystick-knob" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-pink-400 via-rose-500 to-pink-700 shadow-lg border-2 border-white pointer-events-none flex items-center justify-center">
+                    <div class="w-4 h-4 rounded-full bg-white/40"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER: Desktop Keyboard Hints -->
+        <div class="hidden lg:flex glass-dark text-white/90 px-4 py-2 rounded-2xl text-xs gap-4 items-center pointer-events-auto mb-1">
+            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">WASD</kbd> / <kbd class="px-1.5 py-0.5 bg-white/20 rounded">Arrows</kbd> Run</span>
+            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">Shift</kbd> Love Dash ⚡</span>
+            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">Space</kbd> Jump ⬆️</span>
+            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">Swipe/Drag</kbd> Rotate Camera 🎥</span>
+        </div>
+
+        <!-- RIGHT THUMB: Ergonomic Arcade Action Buttons (Dash & Jump) -->
+        <div class="flex items-end gap-3 sm:gap-4 pointer-events-auto pr-1 pb-1">
+            <!-- LOVE DASH BUTTON (Lower-Left of Right Thumb Arc) -->
+            <button id="btn-mobile-dash" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-600 text-white font-game shadow-[0_6px_20px_rgba(147,51,234,0.6)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none relative overflow-hidden">
+                <span class="text-xl sm:text-2xl leading-none">⚡</span>
+                <span class="text-[10px] sm:text-xs font-bold tracking-wider mt-0.5">DASH</span>
+            </button>
+
+            <!-- JUMP BUTTON (Slightly Higher-Right of Right Thumb Arc) -->
+            <button id="btn-mobile-jump" class="w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6 rounded-full bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 text-white font-game shadow-[0_6px_20px_rgba(225,29,72,0.6)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none relative overflow-hidden">
+                <span class="text-xl sm:text-2xl leading-none">⬆️</span>
+                <span class="text-[10px] sm:text-xs font-bold tracking-wider mt-0.5">JUMP</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- STORY INTRO OVERLAY -->
+    <div id="intro-modal" class="fixed inset-0 z-30 flex items-center justify-center p-3 md:p-4 bg-black/50 backdrop-blur-sm">
+        <div class="glass-panel landscape-compact-modal max-w-xl w-full rounded-3xl p-5 md:p-7 text-center relative overflow-hidden border-4 border-pink-300">
+            <div class="text-2xl md:text-4xl mb-1 landscape-hide">🌸💑💍🌸</div>
+            <h1 class="font-romantic landscape-compact-title text-2xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-600 to-purple-700 mb-1">
+                Priyanshu & Ria
+            </h1>
+            <p class="font-game text-xs md:text-sm text-pink-600 uppercase tracking-widest mb-3">
+                ✨ 3D Anime Romantic Chase & Proposal ✨
+            </p>
+
+            <div class="bg-pink-50/95 border border-pink-200 rounded-2xl p-3 md:p-4 text-left text-gray-700 text-xs md:text-sm space-y-1.5 mb-4 shadow-inner">
+                <p>
+                    💖 <strong>The Story:</strong> <span class="text-blue-700 font-bold">Priyanshu</span> loves <span class="text-pink-600 font-bold">Ria</span> with all his heart and brought a diamond ring to Sakura Blossom Park to confess and propose!
+                </p>
+                <p>
+                    😜 <strong>The Playful Chase:</strong>  <em></em> With a playful wink, she darts through the cherry blossoms, daring Priyanshu to catch her first.
+                </p>
+                <p>
+                    🎯 <strong>How to Win:</strong> Use the <strong>Left Joystick / WASD</strong> to run, hold <strong>DASH ⚡</strong> for a heart-trail speed boost, and catch Ria to trigger the <strong>3D Anime Kneeling Proposal Cutscene</strong>!
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2.5">
+                <button id="btn-start-landscape" class="sm:hidden bg-indigo-600 hover:bg-indigo-700 text-white font-game py-3 px-4 rounded-2xl text-sm shadow-lg flex items-center justify-center gap-2">
+                    <span>📲 Fullscreen Landscape + Start</span>
+                </button>
+                <button id="btn-start-game" class="btn-love flex-1 py-3 md:py-3.5 rounded-2xl text-white font-game text-base md:text-lg tracking-wide cursor-pointer">
+                    Start the Anime Chase 💕
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROPOSAL CUTSCENE & VISUAL NOVEL DIALOGUE OVERLAY -->
+    <div id="cutscene-overlay" class="fixed inset-0 z-30 pointer-events-none hidden flex-col justify-between p-3 md:p-6">
+        <!-- Top Cinematic Banner -->
+        <div class="flex justify-between items-center w-full max-w-4xl mx-auto pointer-events-auto">
+            <div class="glass-dark px-4 py-1.5 md:px-5 md:py-2 rounded-full text-pink-200 font-romantic italic text-xs md:text-base flex items-center gap-2">
+                <span>✨</span>
+                <span id="cutscene-stage-title">Caught Her! The Moment of Truth...</span>
+                <span>💍</span>
+            </div>
+            <button id="btn-replay-top" class="hidden glass-panel px-3.5 py-1.5 rounded-full text-pink-700 font-bold text-xs hover:scale-105 transition">
+                🔄 Play Again
+            </button>
+        </div>
+
+        <!-- Bottom Visual Novel Dialogue Box -->
+        <div class="w-full max-w-3xl mx-auto pointer-events-auto mb-1">
+            <div class="glass-dark rounded-3xl p-4 md:p-6 border-2 border-pink-400/75 shadow-2xl relative">
+                <!-- Speaker Badge -->
+                <div id="dialogue-speaker" class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-game text-xs md:text-sm shadow-md -mt-7 mb-2 border border-white/40">
+                    🤵 Priyanshu
+                </div>
+
+                <!-- Dialogue Text -->
+                <p id="dialogue-text" class="text-white text-sm sm:text-base md:text-lg font-medium leading-snug min-h-[2.8rem] md:min-h-[3.6rem]">
+                    "Gotcha, Ria! You can't run away from me anymore..."
+                </p>
+
+                <!-- Interactive Choice / Next Button Row -->
+                <div id="dialogue-actions" class="mt-3 flex flex-wrap justify-end gap-2.5">
+                    <button id="btn-dialogue-next" class="btn-love px-5 py-2 md:px-6 md:py-2.5 rounded-xl text-white font-game text-xs md:text-sm flex items-center gap-2 cursor-pointer">
+                        <span>Continue</span>
+                        <span>💖</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINAL CELEBRATION CARD (After Proposal Acceptance) -->
+    <div id="victory-card" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 hidden max-w-md w-[92%] glass-panel landscape-compact-modal rounded-3xl p-5 md:p-7 text-center border-4 border-pink-400 shadow-2xl">
+        <div class="text-4xl md:text-5xl mb-1 animate-bounce">💍💖🥂</div>
+        <h2 class="font-romantic text-2xl md:text-4xl font-bold text-pink-700 mb-1">
+            She Said YES!
+        </h2>
+        <p class="text-pink-900 font-semibold text-xs md:text-sm mb-3">
+            Priyanshu & Ria — Forever Together! 🌸
+        </p>
+        <p class="text-xs text-gray-700 bg-white/85 p-3 rounded-2xl border border-pink-200 italic mb-4">
+            "Even though I love teasing you and making you chase me around the world, my heart has always belonged only to you, Priyanshu. I love you endlessly!" — Ria 💕
+        </p>
+        <div class="flex gap-2.5 justify-center">
+            <button id="btn-admire-scene" class="px-3.5 py-2.5 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-800 font-bold text-xs md:text-sm border border-pink-300 transition cursor-pointer">
+                🎥 Admire 3D Scene
+            </button>
+            <button id="btn-play-again" class="btn-love px-5 py-2.5 rounded-xl text-white font-game text-xs md:text-sm cursor-pointer">
+                🔄 Chase & Propose Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /***********************************************************************
+         * 1. MOBILE LANDSCAPE ORIENTATION LOCK & FULLSCREEN HELPER
+         ***********************************************************************/
+        async function requestLandscapeFullscreen() {
+            try {
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) {
+                    await docEl.requestFullscreen();
+                } else if (docEl.webkitRequestFullscreen) {
+                    await docEl.webkitRequestFullscreen();
+                }
+                if (screen.orientation && screen.orientation.lock) {
+                    await screen.orientation.lock('landscape').catch(() => {});
+                }
+            } catch (err) {
+                console.warn("Landscape lock note:", err);
+            }
+        }
+
+        document.getElementById('btn-force-landscape').addEventListener('click', () => {
+            requestLandscapeFullscreen();
+            document.getElementById('portrait-warning').style.setProperty('display', 'none', 'important');
+        });
+        document.getElementById('btn-dismiss-portrait').addEventListener('click', () => {
+            document.getElementById('portrait-warning').style.setProperty('display', 'none', 'important');
+        });
+        document.getElementById('btn-fullscreen').addEventListener('click', requestLandscapeFullscreen);
+
+        /***********************************************************************
+         * 2. SOUND SYNTHESIS ENGINE (Tone.js)
+         ***********************************************************************/
+        class RomanticAudio {
+            constructor() {
+                this.enabled = true;
+                this.initialized = false;
+                this.synth = null;
+                this.chime = null;
+            }
+
+            async init() {
+                if (this.initialized) return;
+                try {
+                    await Tone.start();
+                    this.synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: "triangle" },
+                        envelope: { attack: 0.03, decay: 0.2, sustain: 0.25, release: 0.9 }
+                    }).toDestination();
+                    this.synth.volume.value = -10;
+
+                    this.chime = new Tone.Synth({
+                        oscillator: { type: "sine" },
+                        envelope: { attack: 0.01, decay: 0.14, sustain: 0.05, release: 0.4 }
+                    }).toDestination();
+                    this.chime.volume.value = -8;
+
+                    this.initialized = true;
+                } catch (e) {
+                    console.warn("Audio init skipped:", e);
+                }
+            }
+
+            playHeartPickup() {
+                if (!this.enabled || !this.initialized) return;
+                const now = Tone.now();
+                this.chime.triggerAttackRelease("E5", "16n", now);
+                this.chime.triggerAttackRelease("A5", "16n", now + 0.07);
+                this.chime.triggerAttackRelease("C#6", "8n", now + 0.14);
+            }
+
+            playGiggleBubble() {
+                if (!this.enabled || !this.initialized) return;
+                const notes = ["F5", "A5", "C6", "D6", "E6"];
+                const n1 = notes[Math.floor(Math.random() * notes.length)];
+                const n2 = notes[Math.floor(Math.random() * notes.length)];
+                const now = Tone.now();
+                this.chime.triggerAttackRelease(n1, "32n", now);
+                this.chime.triggerAttackRelease(n2, "32n", now + 0.06);
+            }
+
+            playJump() {
+                if (!this.enabled || !this.initialized) return;
+                const now = Tone.now();
+                this.chime.triggerAttackRelease("D5", "32n", now);
+                this.chime.triggerAttackRelease("A5", "16n", now + 0.05);
+            }
+
+            playProposalChord() {
+                if (!this.enabled || !this.initialized) return;
+                const now = Tone.now();
+                this.synth.triggerAttackRelease(["F4", "A4", "C5", "E5"], "2n", now);
+                this.synth.triggerAttackRelease(["G4", "B4", "D5", "F#5"], "2n", now + 0.55);
+                this.synth.triggerAttackRelease(["C4", "E4", "G4", "B4", "D5"], "1n", now + 1.1);
+            }
+
+            playCelebrationFanfare() {
+                if (!this.enabled || !this.initialized) return;
+                const now = Tone.now();
+                this.synth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+                this.synth.triggerAttackRelease(["F5", "A5", "C6"], "8n", now + 0.2);
+                this.synth.triggerAttackRelease(["G5", "B5", "D6"], "8n", now + 0.4);
+                this.synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "1n", now + 0.65);
+            }
+        }
+
+        const audio = new RomanticAudio();
+
+        /***********************************************************************
+         * 3. THREE.JS SCENE, ANIME TOON SHADING & CHERRY BLOSSOM PARK
+         ***********************************************************************/
+        const canvas = document.getElementById('game-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffd8eb);
+        scene.fog = new THREE.FogExp2(0xffd8eb, 0.0105);
+
+        const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 240);
+        camera.position.set(0, 6.5, 13);
+
+        // Anime Cel-Shading Gradient Map (3-Tone Crisp Anime Ramp)
+        function createAnimeToonGradient() {
+            const c = document.createElement('canvas');
+            c.width = 4;
+            c.height = 1;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#8b7b8e'; ctx.fillRect(0, 0, 1, 1);
+            ctx.fillStyle = '#c8b8cb'; ctx.fillRect(1, 0, 1, 1);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(2, 0, 2, 1);
+            const tex = new THREE.CanvasTexture(c);
+            tex.minFilter = THREE.NearestFilter;
+            tex.magFilter = THREE.NearestFilter;
+            tex.generateMipmaps = false;
+            return tex;
+        }
+        const animeGradientMap = createAnimeToonGradient();
+
+        function makeToonMat(colorHex, extra = {}) {
+            return new THREE.MeshToonMaterial({
+                color: colorHex,
+                gradientMap: animeGradientMap,
+                ...extra
+            });
+        }
+
+        // Inverted Hull Anime Outline Helper (gives 3D meshes a crisp anime line-art edge)
+        const outlineMat = new THREE.MeshBasicMaterial({
+            color: 0x231123,
+            side: THREE.BackSide
+        });
+        function addAnimeOutline(mesh, thickness = 0.022) {
+            const outline = new THREE.Mesh(mesh.geometry, outlineMat);
+            outline.scale.set(1 + thickness, 1 + thickness, 1 + thickness);
+            mesh.add(outline);
+        }
+
+        // Lighting
+        const hemiLight = new THREE.HemisphereLight(0xfff5f8, 0x8cc084, 0.85);
+        scene.add(hemiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xfff4d6, 0.9);
+        dirLight.position.set(32, 52, 28);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        const d = 55;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        scene.add(dirLight);
+
+        const obstacles = [];
+        const WORLD_RADIUS = 46;
+
+        function buildRomanticPark() {
+            const ground = new THREE.Mesh(
+                new THREE.CircleGeometry(WORLD_RADIUS + 8, 64),
+                makeToonMat(0x7fd175)
+            );
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            const plazaMat = makeToonMat(0xf7ebe1);
+            const plaza = new THREE.Mesh(new THREE.CircleGeometry(8.5, 48), plazaMat);
+            plaza.rotation.x = -Math.PI / 2;
+            plaza.position.y = 0.02;
+            plaza.receiveShadow = true;
+            scene.add(plaza);
+
+            const ringMesh = new THREE.Mesh(new THREE.RingGeometry(21, 24, 64), plazaMat);
+            ringMesh.rotation.x = -Math.PI / 2;
+            ringMesh.position.y = 0.02;
+            ringMesh.receiveShadow = true;
+            scene.add(ringMesh);
+
+            // Romantic White Gazebo
+            const gazeboGroup = new THREE.Group();
+            const gzX = 0, gzZ = -18;
+            gazeboGroup.position.set(gzX, 0, gzZ);
+
+            const whiteMat = makeToonMat(0xffffff);
+            const roseRoofMat = makeToonMat(0xe11d48);
+            const baseMesh = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 5.6, 0.45, 8), whiteMat);
+            baseMesh.position.y = 0.22;
+            baseMesh.receiveShadow = true;
+            baseMesh.castShadow = true;
+            gazeboGroup.add(baseMesh);
+
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                const px = Math.cos(angle) * 4.4;
+                const pz = Math.sin(angle) * 4.4;
+                const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 4.2, 12), whiteMat);
+                pillar.position.set(px, 2.3, pz);
+                pillar.castShadow = true;
+                gazeboGroup.add(pillar);
+                obstacles.push({ x: gzX + px, z: gzZ + pz, r: 0.55 });
+            }
+
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(5.8, 2.6, 8), roseRoofMat);
+            roof.position.y = 5.6;
+            roof.castShadow = true;
+            gazeboGroup.add(roof);
+            scene.add(gazeboGroup);
+
+            // Shimmering Pond
+            const pondX = 16, pondZ = 12, pondR = 6.2;
+            const pond = new THREE.Mesh(
+                new THREE.CircleGeometry(pondR, 40),
+                new THREE.MeshPhongMaterial({ color: 0x38bdf8, specular: 0xffffff, shininess: 100 })
+            );
+            pond.rotation.x = -Math.PI / 2;
+            pond.position.set(pondX, 0.03, pondZ);
+            scene.add(pond);
+
+            for (let i = 0; i < 24; i++) {
+                const a = (i / 24) * Math.PI * 2;
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55, 0), makeToonMat(0x9ca3af));
+                rock.position.set(pondX + Math.cos(a) * pondR, 0.2, pondZ + Math.sin(a) * pondR);
+                rock.scale.y = 0.6;
+                scene.add(rock);
+            }
+            obstacles.push({ x: pondX, z: pondZ, r: pondR + 0.4 });
+
+            // Sakura Trees
+            const trunkMat = makeToonMat(0x6b4423);
+            const blossomColors = [0xffb7c5, 0xff8da1, 0xffc0cb, 0xf472b6];
+            const treeLocations = [
+                [-14, -10], [14, -10], [-22, 6], [-12, 18], [8, 24],
+                [-26, -18], [26, -16], [-30, -4], [28, 4], [-18, 28],
+                [22, 26], [0, 32], [-8, -30], [12, -28], [-34, 16], [34, -6]
+            ];
+
+            treeLocations.forEach(([tx, tz], idx) => {
+                const tree = new THREE.Group();
+                tree.position.set(tx, 0, tz);
+
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.65, 3.2, 10), trunkMat);
+                trunk.position.y = 1.6;
+                trunk.castShadow = true;
+                tree.add(trunk);
+
+                const leafMat = makeToonMat(blossomColors[idx % blossomColors.length]);
+                const puffs = [
+                    [0, 4.1, 0, 2.3],
+                    [1.2, 3.6, 0.8, 1.7],
+                    [-1.2, 3.5, -0.7, 1.8],
+                    [0.6, 4.8, -0.9, 1.6],
+                    [-0.7, 4.6, 1.0, 1.6]
+                ];
+                puffs.forEach(([px, py, pz, pr]) => {
+                    const puff = new THREE.Mesh(new THREE.SphereGeometry(pr, 14, 14), leafMat);
+                    puff.position.set(px, py, pz);
+                    puff.castShadow = true;
+                    tree.add(puff);
+                });
+
+                scene.add(tree);
+                obstacles.push({ x: tx, z: tz, r: 1.05 });
+            });
+
+            // Benches & Lamps
+            const benchCoords = [
+                [-9, 0, Math.PI / 2],
+                [9, 0, -Math.PI / 2],
+                [0, -9, 0],
+                [-15, 9, Math.PI / 4]
+            ];
+            const woodMat = makeToonMat(0x92400e);
+            const ironMat = makeToonMat(0x1f2937);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+
+            benchCoords.forEach(([bx, bz, rot]) => {
+                const bench = new THREE.Group();
+                bench.position.set(bx, 0, bz);
+                bench.rotation.y = rot;
+
+                const seat = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.15, 0.9), woodMat);
+                seat.position.y = 0.55;
+                seat.castShadow = true;
+                bench.add(seat);
+
+                const back = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.65, 0.12), woodMat);
+                back.position.set(0, 0.95, -0.38);
+                back.castShadow = true;
+                bench.add(back);
+
+                const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 3.8, 8), ironMat);
+                pole.position.set(1.8, 1.9, -0.3);
+                bench.add(pole);
+
+                const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), bulbMat);
+                lantern.position.set(1.8, 3.9, -0.3);
+                bench.add(lantern);
+
+                scene.add(bench);
+                obstacles.push({ x: bx, z: bz, r: 1.35 });
+            });
+
+            // Perimeter Fence
+            const fenceCount = 64;
+            for (let i = 0; i < fenceCount; i++) {
+                const a = (i / fenceCount) * Math.PI * 2;
+                const fx = Math.cos(a) * (WORLD_RADIUS + 1.2);
+                const fz = Math.sin(a) * (WORLD_RADIUS + 1.2);
+                const post = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.4, 0.35), whiteMat);
+                post.position.set(fx, 0.7, fz);
+                post.lookAt(0, 0.7, 0);
+                scene.add(post);
+            }
+        }
+
+        buildRomanticPark();
+
+        /***********************************************************************
+         * 4. PROCEDURAL HIGH-RES 2D ANIME FACE TEXTURE ENGINE
+         *    Draws expressive anime eyes, irises, highlights, eyelashes,
+         *    blush marks, nose shadow, and dynamic mouths with live blinking!
+         ***********************************************************************/
+        class AnimeFaceRenderer {
+            constructor(options) {
+                this.skinColor = options.skinColor || '#ffe0bd';
+                this.eyeColorTop = options.eyeColorTop || '#1e3a8a';
+                this.eyeColorBottom = options.eyeColorBottom || '#60a5fa';
+                this.isFemale = !!options.isFemale;
+                this.expression = 'happy'; // 'happy' | 'tease' | 'blush' | 'surprised' | 'love'
+                this.isBlinking = false;
+
+                this.canvas = document.createElement('canvas');
+                this.canvas.width = 512;
+                this.canvas.height = 512;
+                this.ctx = this.canvas.getContext('2d');
+
+                this.texture = new THREE.CanvasTexture(this.canvas);
+                this.texture.needsUpdate = true;
+                this.renderFace();
+            }
+
+            setState(expression, isBlinking) {
+                if (this.expression === expression && this.isBlinking === isBlinking) return;
+                this.expression = expression;
+                this.isBlinking = isBlinking;
+                this.renderFace();
+            }
+
+            renderFace() {
+                const ctx = this.ctx;
+                const w = 512, h = 512;
+
+                // Base anime skin tone
+                ctx.fillStyle = this.skinColor;
+                ctx.fillRect(0, 0, w, h);
+
+                // Soft forehead/chin warm gradient
+                const grad = ctx.createLinearGradient(0, 0, 0, h);
+                grad.addColorStop(0, 'rgba(255, 190, 170, 0.12)');
+                grad.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+                grad.addColorStop(1, 'rgba(235, 160, 140, 0.18)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                // Notice: SphereGeometry UV maps front center around U=0.5 (x=256), V=0.5 (y=256)
+                const leftEyeX = 205;
+                const rightEyeX = 307;
+                const eyeY = 252;
+
+                // Anime Cheek Blush + Diagonal Anime Blush Slash Lines
+                const blushIntensity = (this.expression === 'blush' || this.expression === 'love') ? 0.55 : 0.32;
+                ctx.fillStyle = `rgba(255, 90, 130, ${blushIntensity})`;
+                ctx.beginPath();
+                ctx.ellipse(leftEyeX - 18, eyeY + 46, 26, 14, 0, 0, Math.PI * 2);
+                ctx.ellipse(rightEyeX + 18, eyeY + 46, 26, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (this.expression === 'blush' || this.expression === 'love') {
+                    ctx.strokeStyle = 'rgba(225, 29, 72, 0.55)';
+                    ctx.lineWidth = 2.5;
+                    for (let i = -1; i <= 1; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(leftEyeX - 18 + i * 9 - 4, eyeY + 42);
+                        ctx.lineTo(leftEyeX - 18 + i * 9 + 4, eyeY + 51);
+                        ctx.moveTo(rightEyeX + 18 + i * 9 - 4, eyeY + 42);
+                        ctx.lineTo(rightEyeX + 18 + i * 9 + 4, eyeY + 51);
+                        ctx.stroke();
+                    }
+                }
+
+                // Draw Both Anime Eyes
+                this.drawSingleEye(ctx, leftEyeX, eyeY, true);
+                this.drawSingleEye(ctx, rightEyeX, eyeY, false);
+
+                // Delicate Anime Nose Shadow & Highlight
+                ctx.fillStyle = 'rgba(180, 110, 95, 0.45)';
+                ctx.beginPath();
+                ctx.moveTo(256, 275);
+                ctx.lineTo(251, 293);
+                ctx.lineTo(258, 294);
+                ctx.closePath();
+                ctx.fill();
+
+                // Anime Mouth Expression
+                const mouthY = 330;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                if (this.expression === 'tease') {
+                    // Playful cat-like anime ":3" / teasing smirk with tiny fang
+                    ctx.strokeStyle = '#7c2d12';
+                    ctx.lineWidth = 4.5;
+                    ctx.beginPath();
+                    ctx.arc(246, mouthY, 10, 0.1 * Math.PI, 0.9 * Math.PI, false);
+                    ctx.arc(266, mouthY, 10, 0.1 * Math.PI, 0.85 * Math.PI, false);
+                    ctx.stroke();
+                } else if (this.expression === 'surprised') {
+                    // Cute anime "O" gasped mouth
+                    ctx.fillStyle = '#f43f5e';
+                    ctx.strokeStyle = '#881337';
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.ellipse(256, mouthY + 4, 11, 14, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                } else if (this.expression === 'love') {
+                    // Joyful open anime smile
+                    ctx.fillStyle = '#fb7185';
+                    ctx.strokeStyle = '#881337';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(234, mouthY - 3);
+                    ctx.quadraticCurveTo(256, mouthY + 28, 278, mouthY - 3);
+                    ctx.quadraticCurveTo(256, mouthY + 2, 234, mouthY - 3);
+                    ctx.fill();
+                    ctx.stroke();
+                } else {
+                    // Warm anime smile
+                    ctx.strokeStyle = '#7c2d12';
+                    ctx.lineWidth = 4.5;
+                    ctx.beginPath();
+                    ctx.moveTo(236, mouthY);
+                    ctx.quadraticCurveTo(256, mouthY + 18, 276, mouthY);
+                    ctx.stroke();
+                }
+
+                this.texture.needsUpdate = true;
+            }
+
+            drawSingleEye(ctx, cx, cy, isLeft) {
+                const winkTease = (this.expression === 'tease' && !isLeft);
+
+                // Eyebrow
+                ctx.strokeStyle = '#291711';
+                ctx.lineWidth = this.isFemale ? 4.5 : 6.5;
+                ctx.beginPath();
+                const browOffset = (this.expression === 'blush' || this.expression === 'surprised') ? -8 : 0;
+                ctx.moveTo(cx - 26, cy - 36 + browOffset);
+                ctx.quadraticCurveTo(cx, cy - 46 + browOffset, cx + 26, cy - 34 + browOffset);
+                ctx.stroke();
+
+                if (this.isBlinking || winkTease) {
+                    // Closed happy/winking anime eye arc
+                    ctx.strokeStyle = '#1c1917';
+                    ctx.lineWidth = 5.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 25, cy + 4);
+                    ctx.quadraticCurveTo(cx, cy - 16, cx + 25, cy + 4);
+                    ctx.stroke();
+                    return;
+                }
+
+                const rx = 24;
+                const ry = this.isFemale ? 29 : 23;
+
+                // Sclera (White of eye)
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Large Rich Anime Iris Gradient
+                const irisGrad = ctx.createLinearGradient(cx, cy - ry, cx, cy + ry);
+                irisGrad.addColorStop(0, this.eyeColorTop);
+                irisGrad.addColorStop(1, this.eyeColorBottom);
+                ctx.fillStyle = irisGrad;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 2, rx * 0.76, ry * 0.82, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Deep Pupil
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 2, rx * 0.36, ry * 0.42, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Anime Starry Eye Highlights (Top-Left Big + Bottom-Right Small)
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(cx - 8, cy - 9, 7.5, 0, Math.PI * 2);
+                ctx.arc(cx + 8, cy + 10, 4.0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // If in 'love' expression, add tiny pink heart highlight inside eye!
+                if (this.expression === 'love') {
+                    ctx.fillStyle = '#fda4af';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy + 9, 4.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Thick Upper Anime Eyelash Wing
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = this.isFemale ? 7.5 : 6.5;
+                ctx.beginPath();
+                ctx.moveTo(cx - rx - 3, cy - 4);
+                ctx.quadraticCurveTo(cx, cy - ry - 10, cx + rx + 4, cy - 3);
+                ctx.stroke();
+
+                if (this.isFemale) {
+                    // Cute outer eyelash flicks for Ria
+                    ctx.lineWidth = 4.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + (isLeft ? -rx : rx), cy - 8);
+                    ctx.lineTo(cx + (isLeft ? -rx - 9 : rx + 9), cy - 17);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        /***********************************************************************
+         * 5. 3D ANIME ARTICULATED CHARACTER BUILDERS (PRIYANSHU & RIA)
+         *    Full human anime proportions, neck, contoured torso, upper/lower
+         *    limbs, shoes, layered hair bangs, and cel-shaded outlines!
+         ***********************************************************************/
+        function createHeartShapeMesh(colorHex, size = 0.35) {
+            const x = 0, y = 0;
+            const heartShape = new THREE.Shape();
+            heartShape.moveTo(x + 0.25, y + 0.25);
+            heartShape.bezierCurveTo(x + 0.25, y + 0.25, x + 0.2, y, x, y);
+            heartShape.bezierCurveTo(x - 0.3, y, x - 0.3, y + 0.35, x - 0.3, y + 0.35);
+            heartShape.bezierCurveTo(x - 0.3, y + 0.55, x - 0.1, y + 0.77, x + 0.25, y + 0.95);
+            heartShape.bezierCurveTo(x + 0.6, y + 0.77, x + 0.8, y + 0.55, x + 0.8, y + 0.35);
+            heartShape.bezierCurveTo(x + 0.8, y + 0.35, x + 0.8, y, x + 0.5, y);
+            heartShape.bezierCurveTo(x + 0.35, y, x + 0.25, y + 0.25, x + 0.25, y + 0.25);
+
+            const extrudeSettings = { depth: 0.18, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.04, bevelThickness: 0.04 };
+            const geo = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
+            geo.center();
+            const mat = new THREE.MeshPhongMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.25, shininess: 100 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.scale.set(size, size, size);
+            mesh.rotation.z = Math.PI;
+            return mesh;
+        }
+
+        function buildAnimePriyanshu() {
+            const root = new THREE.Group();
+
+            // Procedural Anime Face for Priyanshu (Warm skin, deep cobalt-blue anime eyes)
+            const faceRenderer = new AnimeFaceRenderer({
+                skinColor: '#ffd8be',
+                eyeColorTop: '#1e1b4b',
+                eyeColorBottom: '#3b82f6',
+                isFemale: false
+            });
+
+            const skinMat = makeToonMat(0xffd8be);
+            const faceMat = new THREE.MeshToonMaterial({
+                map: faceRenderer.texture,
+                gradientMap: animeGradientMap
+            });
+            const blazerMat = makeToonMat(0x1e293b); // Sleek Anime Navy-Charcoal Blazer
+            const lapelMat = makeToonMat(0x334155);
+            const shirtMat = makeToonMat(0xffffff);
+            const tieMat = makeToonMat(0xe11d48);   // Crimson Anime Ribbon Tie
+            const pantsMat = makeToonMat(0x0f172a);
+            const shoeMat = makeToonMat(0x18181b);
+            const hairMat = makeToonMat(0x171717); // Jet-black layered anime hair
+
+            // Pelvis / Root Body Pivot (Allows kneeling & leaning)
+            const bodyPivot = new THREE.Group();
+            root.add(bodyPivot);
+
+            // Contoured Anime Torso (Tapered chest + waist + blazer collar)
+            const chest = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.34, 1.08, 16), blazerMat);
+            chest.scale.set(1.12, 1, 0.68);
+            chest.position.y = 1.66;
+            chest.castShadow = true;
+            addAnimeOutline(chest);
+            bodyPivot.add(chest);
+
+            // Crisp White Dress Shirt V-Front & Red Tie
+            const shirtFront = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.15, 0.9, 12), shirtMat);
+            shirtFront.scale.set(1.0, 1, 0.74);
+            shirtFront.position.set(0, 1.72, 0.06);
+            bodyPivot.add(shirtFront);
+
+            const tie = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.65, 4), tieMat);
+            tie.rotation.x = Math.PI;
+            tie.position.set(0, 1.68, 0.25);
+            bodyPivot.add(tie);
+
+            // Neck
+            const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.28, 12), skinMat);
+            neck.position.y = 2.26;
+            bodyPivot.add(neck);
+
+            // Anime Head Group
+            const headGroup = new THREE.Group();
+            headGroup.position.set(0, 2.66, 0);
+            bodyPivot.add(headGroup);
+
+            const headGeo = new THREE.SphereGeometry(0.43, 28, 28);
+            // Rotate sphere so UV center (0.5, 0.5) faces +Z directly!
+            headGeo.rotateY(-Math.PI / 2);
+            const headMesh = new THREE.Mesh(headGeo, faceMat);
+            headMesh.scale.set(0.95, 1.04, 0.95);
+            headMesh.castShadow = true;
+            addAnimeOutline(headMesh);
+            headGroup.add(headMesh);
+
+            // 3D Anime Ears
+            const earGeo = new THREE.SphereGeometry(0.09, 10, 10);
+            const leftEar = new THREE.Mesh(earGeo, skinMat);
+            leftEar.scale.set(0.5, 1.1, 0.7);
+            leftEar.position.set(0.41, -0.02, 0);
+            const rightEar = leftEar.clone();
+            rightEar.position.set(-0.41, -0.02, 0);
+            headGroup.add(leftEar, rightEar);
+
+            // Multi-Layered Spiky Anime Hair (Crown + Swaying Front Bangs + Side Locks)
+            const hairGroup = new THREE.Group();
+            headGroup.add(hairGroup);
+
+            const hairCrown = new THREE.Mesh(new THREE.SphereGeometry(0.46, 20, 20), hairMat);
+            hairCrown.position.set(0, 0.1, -0.04);
+            hairCrown.scale.set(1.02, 0.95, 1.05);
+            addAnimeOutline(hairCrown);
+            hairGroup.add(hairCrown);
+
+            // Anime Spikes & Front Bangs
+            const spikeSpecs = [
+                // Front bangs framing anime eyes
+                [0.0, 0.22, 0.38, 0.14, 0.42, 2.75, 0.0, 0.08],
+                [-0.18, 0.22, 0.35, 0.13, 0.40, 2.7, 0.15, -0.22],
+                [0.18, 0.22, 0.35, 0.13, 0.40, 2.7, -0.15, 0.22],
+                [-0.33, 0.14, 0.24, 0.12, 0.44, 2.85, 0.2, -0.35],
+                [0.33, 0.14, 0.24, 0.12, 0.44, 2.85, -0.2, 0.35],
+                // Top & Back dynamic anime spikes
+                [0.08, 0.46, 0.12, 0.18, 0.45, -0.4, 0.0, -0.35],
+                [-0.16, 0.44, 0.05, 0.17, 0.42, -0.5, 0.0, 0.4],
+                [0.22, 0.34, -0.22, 0.18, 0.45, -0.9, 0.2, -0.4],
+                [-0.22, 0.34, -0.22, 0.18, 0.45, -0.9, -0.2, 0.4],
+                [0.0, 0.25, -0.36, 0.20, 0.45, -1.2, 0.0, 0.0]
+            ];
+            spikeSpecs.forEach(([sx, sy, sz, r, h, rx, ry, rz]) => {
+                const spike = new THREE.Mesh(new THREE.ConeGeometry(r, h, 8), hairMat);
+                spike.position.set(sx, sy, sz);
+                spike.rotation.set(rx, ry, rz);
+                hairGroup.add(spike);
+            });
+
+            // Articulated Arms (Shoulder -> Upper Arm -> Elbow -> Forearm -> Hand)
+            function buildArticulatedArm(isLeft) {
+                const side = isLeft ? 1 : -1;
+                const shoulderPivot = new THREE.Group();
+                shoulderPivot.position.set(side * 0.52, 2.08, 0);
+
+                const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.10, 0.48, 12), blazerMat);
+                upperArm.position.y = -0.22;
+                upperArm.castShadow = true;
+                addAnimeOutline(upperArm);
+                shoulderPivot.add(upperArm);
+
+                const elbowPivot = new THREE.Group();
+                elbowPivot.position.set(0, -0.45, 0);
+                shoulderPivot.add(elbowPivot);
+
+                const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.08, 0.44, 12), blazerMat);
+                forearm.position.y = -0.20;
+                forearm.castShadow = true;
+                addAnimeOutline(forearm);
+                elbowPivot.add(forearm);
+
+                const hand = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), skinMat);
+                hand.position.y = -0.44;
+                elbowPivot.add(hand);
+
+                bodyPivot.add(shoulderPivot);
+                return { shoulderPivot, elbowPivot, hand };
+            }
+
+            const leftArm = buildArticulatedArm(true);
+            const rightArm = buildArticulatedArm(false);
+
+            // Velvet Ring Box + Sparkling Diamond Ring attached to Right Hand
+            const ringBoxGroup = new THREE.Group();
+            ringBoxGroup.position.set(0, -0.48, 0.16);
+            const boxBase = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.18, 0.28), makeToonMat(0xbe123c));
+            addAnimeOutline(boxBase);
+            ringBoxGroup.add(boxBase);
+
+            // Open Hinged Velvet Lid
+            const boxLid = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.28), makeToonMat(0x9f1239));
+            boxLid.position.set(0, 0.16, -0.12);
+            boxLid.rotation.x = -1.1;
+            ringBoxGroup.add(boxLid);
+
+            const goldRing = new THREE.Mesh(
+                new THREE.TorusGeometry(0.08, 0.022, 10, 20),
+                new THREE.MeshPhongMaterial({ color: 0xfacc15, shininess: 140 })
+            );
+            goldRing.position.y = 0.14;
+            ringBoxGroup.add(goldRing);
+
+            const diamond = new THREE.Mesh(
+                new THREE.OctahedronGeometry(0.085, 0),
+                new THREE.MeshPhongMaterial({ color: 0xe0f2fe, emissive: 0x38bdf8, emissiveIntensity: 0.7, shininess: 160 })
+            );
+            diamond.position.y = 0.24;
+            ringBoxGroup.add(diamond);
+            ringBoxGroup.visible = false;
+            rightArm.elbowPivot.add(ringBoxGroup);
+
+            // Articulated Legs (Hip -> Thigh -> Knee -> Calf -> Dress Shoe)
+            function buildArticulatedLeg(isLeft) {
+                const side = isLeft ? 1 : -1;
+                const hipPivot = new THREE.Group();
+                hipPivot.position.set(side * 0.21, 1.12, 0);
+
+                const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.145, 0.12, 0.56, 12), pantsMat);
+                thigh.position.y = -0.26;
+                thigh.castShadow = true;
+                addAnimeOutline(thigh);
+                hipPivot.add(thigh);
+
+                const kneePivot = new THREE.Group();
+                kneePivot.position.set(0, -0.54, 0);
+                hipPivot.add(kneePivot);
+
+                const calf = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.095, 0.52, 12), pantsMat);
+                calf.position.y = -0.25;
+                calf.castShadow = true;
+                addAnimeOutline(calf);
+                kneePivot.add(calf);
+
+                const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.13, 0.34), shoeMat);
+                shoe.position.set(0, -0.52, 0.06);
+                addAnimeOutline(shoe);
+                kneePivot.add(shoe);
+
+                root.add(hipPivot);
+                return { hipPivot, kneePivot };
+            }
+
+            const leftLeg = buildArticulatedLeg(true);
+            const rightLeg = buildArticulatedLeg(false);
+
+            scene.add(root);
+
+            return {
+                mesh: root,
+                face: faceRenderer,
+                bodyPivot,
+                headGroup,
+                hairGroup,
+                leftArm,
+                rightArm,
+                leftLeg,
+                rightLeg,
+                ringBoxGroup,
+                diamond
+            };
+        }
+
+        function buildAnimeRia() {
+            const root = new THREE.Group();
+
+            // Procedural Anime Face for Ria (Porcelain-warm skin, sparkling rose-amber anime eyes)
+            const faceRenderer = new AnimeFaceRenderer({
+                skinColor: '#ffe2cc',
+                eyeColorTop: '#831843',
+                eyeColorBottom: '#f43f5e',
+                isFemale: true
+            });
+            faceRenderer.setState('tease', false);
+
+            const skinMat = makeToonMat(0xffe2cc);
+            const faceMat = new THREE.MeshToonMaterial({
+                map: faceRenderer.texture,
+                gradientMap: animeGradientMap
+            });
+            const dressMat = makeToonMat(0xec4899);      // Vibrant Sakura Rose Dress
+            const frillMat = makeToonMat(0xfff1f2);      // White Collar & Pleated Trim
+            const ribbonMat = makeToonMat(0xfef08a);     // Golden Waist Ribbon
+            const hairMat = makeToonMat(0x2e150f);       // Glossy Dark Chestnut Anime Hair
+            const sockMat = makeToonMat(0xffffff);
+            const shoeMat = makeToonMat(0xbe123c);       // Cute Red Mary-Jane Shoes
+
+            const bodyPivot = new THREE.Group();
+            root.add(bodyPivot);
+
+            // Contoured Anime Bodice
+            const bodice = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.25, 0.62, 16), dressMat);
+            bodice.scale.set(1.06, 1, 0.72);
+            bodice.position.y = 1.82;
+            bodice.castShadow = true;
+            addAnimeOutline(bodice);
+            bodyPivot.add(bodice);
+
+            // Sailor/Date White Collar
+            const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.32, 0.14, 16), frillMat);
+            collar.scale.set(1.08, 1, 0.76);
+            collar.position.y = 2.08;
+            bodyPivot.add(collar);
+
+            // Flowing Pleated Anime Skirt
+            const skirtPivot = new THREE.Group();
+            skirtPivot.position.y = 1.54;
+            bodyPivot.add(skirtPivot);
+
+            const skirt = new THREE.Mesh(new THREE.ConeGeometry(0.72, 0.78, 24), dressMat);
+            skirt.position.y = -0.32;
+            skirt.castShadow = true;
+            addAnimeOutline(skirt);
+            skirtPivot.add(skirt);
+
+            const skirtHem = new THREE.Mesh(new THREE.TorusGeometry(0.70, 0.04, 8, 24), frillMat);
+            skirtHem.rotation.x = Math.PI / 2;
+            skirtHem.position.y = -0.68;
+            skirtPivot.add(skirtHem);
+
+            const waistSash = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.045, 8, 20), ribbonMat);
+            waistSash.scale.set(1.06, 0.75, 1);
+            waistSash.rotation.x = Math.PI / 2;
+            waistSash.position.y = 1.54;
+            bodyPivot.add(waistSash);
+
+            // Neck
+            const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.25, 12), skinMat);
+            neck.position.y = 2.22;
+            bodyPivot.add(neck);
+
+            // Anime Head Group
+            const headGroup = new THREE.Group();
+            headGroup.position.set(0, 2.58, 0);
+            bodyPivot.add(headGroup);
+
+            const headGeo = new THREE.SphereGeometry(0.41, 28, 28);
+            headGeo.rotateY(-Math.PI / 2);
+            const headMesh = new THREE.Mesh(headGeo, faceMat);
+            headMesh.scale.set(0.96, 1.02, 0.95);
+            headMesh.castShadow = true;
+            addAnimeOutline(headMesh);
+            headGroup.add(headMesh);
+
+            // Anime Hair (Crown + Hime Cut Side Locks + Twin Flowing Ponytails + Sakura Ornament)
+            const hairGroup = new THREE.Group();
+            headGroup.add(hairGroup);
+
+            const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.44, 20, 20), hairMat);
+            hairCap.position.set(0, 0.09, -0.04);
+            addAnimeOutline(hairCap);
+            hairGroup.add(hairCap);
+
+            // Swept Anime Front Bangs
+            const riaBangs = [
+                [0, 0.20, 0.36, 0.14, 0.36, 2.8, 0, 0],
+                [-0.17, 0.19, 0.33, 0.13, 0.38, 2.75, 0.1, -0.22],
+                [0.17, 0.19, 0.33, 0.13, 0.38, 2.75, -0.1, 0.22],
+                // Framing cheek side-locks
+                [-0.37, -0.08, 0.18, 0.10, 0.52, 3.05, 0, -0.1],
+                [0.37, -0.08, 0.18, 0.10, 0.52, 3.05, 0, 0.1]
+            ];
+            riaBangs.forEach(([bx, by, bz, r, h, rx, ry, rz]) => {
+                const bang = new THREE.Mesh(new THREE.ConeGeometry(r, h, 8), hairMat);
+                bang.position.set(bx, by, bz);
+                bang.rotation.set(rx, ry, rz);
+                hairGroup.add(bang);
+            });
+
+            // Dynamic Twin-Tails / Ponytail Pivot that bounces with physics!
+            const ponytailPivot = new THREE.Group();
+            ponytailPivot.position.set(0, 0.08, -0.38);
+            hairGroup.add(ponytailPivot);
+
+            const mainPonytail = new THREE.Mesh(new THREE.ConeGeometry(0.28, 1.15, 14), hairMat);
+            mainPonytail.position.set(0, -0.45, -0.15);
+            mainPonytail.rotation.x = 2.65;
+            addAnimeOutline(mainPonytail);
+            ponytailPivot.add(mainPonytail);
+
+            // Cute Sakura Hair Ornament
+            const hairFlower = new THREE.Mesh(new THREE.DodecahedronGeometry(0.13, 0), frillMat);
+            hairFlower.position.set(-0.34, 0.24, 0.22);
+            hairGroup.add(hairFlower);
+
+            // Articulated Slender Anime Arms
+            function buildRiaArm(isLeft) {
+                const side = isLeft ? 1 : -1;
+                const shoulderPivot = new THREE.Group();
+                shoulderPivot.position.set(side * 0.42, 2.02, 0);
+
+                const puffSleeve = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 12), dressMat);
+                puffSleeve.position.y = -0.06;
+                shoulderPivot.add(puffSleeve);
+
+                const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.075, 0.44, 12), skinMat);
+                upperArm.position.y = -0.22;
+                upperArm.castShadow = true;
+                addAnimeOutline(upperArm);
+                shoulderPivot.add(upperArm);
+
+                const elbowPivot = new THREE.Group();
+                elbowPivot.position.set(0, -0.42, 0);
+                shoulderPivot.add(elbowPivot);
+
+                const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.062, 0.40, 12), skinMat);
+                forearm.position.y = -0.19;
+                forearm.castShadow = true;
+                addAnimeOutline(forearm);
+                elbowPivot.add(forearm);
+
+                const hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), skinMat);
+                hand.position.y = -0.40;
+                elbowPivot.add(hand);
+
+                bodyPivot.add(shoulderPivot);
+                return { shoulderPivot, elbowPivot, hand };
+            }
+
+            const leftArm = buildRiaArm(true);
+            const rightArm = buildRiaArm(false);
+
+            // Articulated Legs with White Anime Stockings & Mary-Jane Shoes
+            function buildRiaLeg(isLeft) {
+                const side = isLeft ? 1 : -1;
+                const hipPivot = new THREE.Group();
+                hipPivot.position.set(side * 0.18, 1.05, 0);
+
+                const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.50, 12), skinMat);
+                thigh.position.y = -0.24;
+                thigh.castShadow = true;
+                addAnimeOutline(thigh);
+                hipPivot.add(thigh);
+
+                const kneePivot = new THREE.Group();
+                kneePivot.position.set(0, -0.48, 0);
+                hipPivot.add(kneePivot);
+
+                const calf = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.07, 0.48, 12), sockMat);
+                calf.position.y = -0.23;
+                calf.castShadow = true;
+                addAnimeOutline(calf);
+                kneePivot.add(calf);
+
+                const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.11, 0.28), shoeMat);
+                shoe.position.set(0, -0.48, 0.05);
+                addAnimeOutline(shoe);
+                kneePivot.add(shoe);
+
+                root.add(hipPivot);
+                return { hipPivot, kneePivot };
+            }
+
+            const leftLeg = buildRiaLeg(true);
+            const rightLeg = buildRiaLeg(false);
+
+            scene.add(root);
+
+            return {
+                mesh: root,
+                face: faceRenderer,
+                bodyPivot,
+                skirtPivot,
+                headGroup,
+                ponytailPivot,
+                leftArm,
+                rightArm,
+                leftLeg,
+                rightLeg
+            };
+        }
+
+        const priyanshu = buildAnimePriyanshu();
+        const ria = buildAnimeRia();
+
+        /***********************************************************************
+         * 6. COLLECTIBLE LOVE HEARTS & SAKURA PETAL PARTICLES
+         ***********************************************************************/
+        const loveHearts = [];
+        const HEART_COUNT = 14;
+
+        function spawnLoveHeart(index) {
+            const heartGroup = new THREE.Group();
+            const heartMesh = createHeartShapeMesh(0xff1e56, 0.55);
+            heartMesh.position.y = 1.1;
+            heartGroup.add(heartMesh);
+
+            const ring = new THREE.Mesh(
+                new THREE.RingGeometry(0.45, 0.62, 24),
+                new THREE.MeshBasicMaterial({ color: 0xf472b6, side: THREE.DoubleSide })
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.06;
+            heartGroup.add(ring);
+
+            placeHeartRandomly(heartGroup);
+            scene.add(heartGroup);
+            loveHearts.push({ group: heartGroup, mesh: heartMesh, phase: index * 0.7 });
+        }
+
+        function placeHeartRandomly(group) {
+            let valid = false;
+            let hx = 0, hz = 0;
+            while (!valid) {
+                const angle = Math.random() * Math.PI * 2;
+                const r = 6 + Math.random() * (WORLD_RADIUS - 10);
+                hx = Math.cos(angle) * r;
+                hz = Math.sin(angle) * r;
+                valid = true;
+                for (const ob of obstacles) {
+                    if (Math.hypot(hx - ob.x, hz - ob.z) < ob.r + 1.5) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+            group.position.set(hx, 0, hz);
+        }
+
+        for (let i = 0; i < HEART_COUNT; i++) spawnLoveHeart(i);
+
+        // Falling Cherry Blossom Petals
+        const PETAL_COUNT = 220;
+        const petalGeo = new THREE.BufferGeometry();
+        const petalPositions = new Float32Array(PETAL_COUNT * 3);
+        const petalSpeeds = [];
+
+        for (let i = 0; i < PETAL_COUNT; i++) {
+            petalPositions[i * 3] = (Math.random() - 0.5) * 90;
+            petalPositions[i * 3 + 1] = Math.random() * 25 + 2;
+            petalPositions[i * 3 + 2] = (Math.random() - 0.5) * 90;
+            petalSpeeds.push({
+                vy: 1.2 + Math.random() * 1.4,
+                vx: (Math.random() - 0.5) * 1.2,
+                vz: (Math.random() - 0.5) * 1.2
+            });
+        }
+        petalGeo.setAttribute('position', new THREE.BufferAttribute(petalPositions, 3));
+        const petalSystem = new THREE.Points(
+            petalGeo,
+            new THREE.PointsMaterial({ color: 0xffb7c5, size: 0.42, transparent: true, opacity: 0.85 })
+        );
+        scene.add(petalSystem);
+
+        const burstHearts = [];
+        function emitHeartBurst(x, y, z, count = 12) {
+            const colors = [0xff1e56, 0xff6b8b, 0xfbbf24, 0xec4899];
+            for (let i = 0; i < count; i++) {
+                const h = createHeartShapeMesh(colors[i % colors.length], 0.28 + Math.random() * 0.22);
+                h.position.set(x, y, z);
+                scene.add(h);
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 1.5 + Math.random() * 4.5;
+                burstHearts.push({
+                    mesh: h,
+                    vx: Math.cos(angle) * spd,
+                    vy: 3.0 + Math.random() * 4.5,
+                    vz: Math.sin(angle) * spd,
+                    life: 1.6 + Math.random() * 0.8
+                });
+            }
+        }
+
+        /***********************************************************************
+         * 7. GAME STATE, PHYSICS, ANIME BLINKING & STEERING AI
+         ***********************************************************************/
+        const GAME_STATE = {
+            INTRO: 'INTRO',
+            CHASE: 'CHASE',
+            CUTSCENE: 'CUTSCENE',
+            CELEBRATION: 'CELEBRATION'
+        };
+
+        let currentState = GAME_STATE.INTRO;
+
+        const playerPhys = {
+            x: 0, y: 0, z: 8,
+            vx: 0, vy: 0, vz: 0,
+            yaw: Math.PI,
+            radius: 0.65,
+            baseSpeed: 11.2,
+            dashSpeed: 16.8,
+            stamina: 100,
+            onGround: true,
+            animTime: 0
+        };
+
+        const riaPhys = {
+            x: 0, y: 0, z: -4,
+            vx: 0, vy: 0, vz: 0,
+            yaw: 0,
+            radius: 0.6,
+            speed: 9.7,
+            animTime: 0,
+            teaseTimer: 0,
+            isWaitingTease: false
+        };
+
+        let catchProgress = 14;
+        let heartsCollected = 0;
+        let cameraAzimuth = 0;
+        let cutsceneCameraAngle = 0;
+        let cutsceneFocusMode = 'PAIR'; // 'PAIR' | 'PRIYANSHU_KNEEL' | 'RIA_BLUSH' | 'CELEBRATE'
+
+        // Automatic Anime Eye Blinking Timers
+        let blinkTimer = 0;
+
+        const RIA_TEASES = [
+            "Catch me if you can, Priyanshu! 😜🌸",
+            "Is that ring box in your hand for me? Catch me first! 💍✨",
+            "Hehe, too slow! Use your Love Dash, handsome! ⚡💕",
+            "Ooh, almost had me! Try harder! 🏃‍♀️💨",
+            "Wait up? Hmm... let me think... NOPE! 😝💖",
+            "Collect those glowing hearts if you want to propose! 🌹😉",
+            "You look so cute when you're determined, Priyanshu! 🥰",
+            "Come closer! Maybe I'll let you catch me... psych! 🌸💃"
+        ];
+
+        const riaBubbleEl = document.getElementById('ria-bubble');
+
+        function triggerRiaTease(customText = null) {
+            const text = customText || RIA_TEASES[Math.floor(Math.random() * RIA_TEASES.length)];
+            riaBubbleEl.textContent = text;
+            riaBubbleEl.classList.remove('speech-bubble');
+            void riaBubbleEl.offsetWidth;
+            riaBubbleEl.classList.add('speech-bubble');
+            audio.playGiggleBubble();
+        }
+
+        function resetCharacterLimbs() {
+            priyanshu.bodyPivot.position.set(0, 0, 0);
+            priyanshu.bodyPivot.rotation.set(0, 0, 0);
+            priyanshu.headGroup.rotation.set(0, 0, 0);
+            priyanshu.leftArm.shoulderPivot.rotation.set(0, 0, 0.08);
+            priyanshu.leftArm.elbowPivot.rotation.set(0, 0, 0);
+            priyanshu.rightArm.shoulderPivot.rotation.set(0, 0, -0.08);
+            priyanshu.rightArm.elbowPivot.rotation.set(0, 0, 0);
+            priyanshu.leftLeg.hipPivot.rotation.set(0, 0, 0);
+            priyanshu.leftLeg.kneePivot.rotation.set(0, 0, 0);
+            priyanshu.rightLeg.hipPivot.rotation.set(0, 0, 0);
+            priyanshu.rightLeg.kneePivot.rotation.set(0, 0, 0);
+            priyanshu.ringBoxGroup.visible = false;
+            priyanshu.face.setState('happy', false);
+
+            ria.bodyPivot.position.set(0, 0, 0);
+            ria.bodyPivot.rotation.set(0, 0, 0);
+            ria.headGroup.rotation.set(0, 0, 0);
+            ria.leftArm.shoulderPivot.rotation.set(0, 0, 0.12);
+            ria.leftArm.elbowPivot.rotation.set(0, 0, 0);
+            ria.rightArm.shoulderPivot.rotation.set(0, 0, -0.12);
+            ria.rightArm.elbowPivot.rotation.set(0, 0, 0);
+            ria.leftLeg.hipPivot.rotation.set(0, 0, 0);
+            ria.leftLeg.kneePivot.rotation.set(0, 0, 0);
+            ria.rightLeg.hipPivot.rotation.set(0, 0, 0);
+            ria.rightLeg.kneePivot.rotation.set(0, 0, 0);
+            ria.face.setState('tease', false);
+        }
+
+        function resetGamePositions() {
+            playerPhys.x = 0; playerPhys.y = 0; playerPhys.z = 9;
+            playerPhys.vx = 0; playerPhys.vy = 0; playerPhys.vz = 0;
+            playerPhys.yaw = Math.PI;
+            playerPhys.stamina = 100;
+
+            riaPhys.x = 0; riaPhys.y = 0; riaPhys.z = -3;
+            riaPhys.vx = 0; riaPhys.vz = 0;
+            riaPhys.yaw = 0;
+            riaPhys.teaseTimer = 3.5;
+
+            catchProgress = 14;
+            heartsCollected = 0;
+            document.getElementById('hud-hearts').textContent = '0';
+
+            resetCharacterLimbs();
+            updateCharacterTransforms();
+        }
+
+        function resolveObstacleCollisions(entity) {
+            const distFromCenter = Math.hypot(entity.x, entity.z);
+            if (distFromCenter > WORLD_RADIUS - entity.radius) {
+                const angle = Math.atan2(entity.z, entity.x);
+                entity.x = Math.cos(angle) * (WORLD_RADIUS - entity.radius);
+                entity.z = Math.sin(angle) * (WORLD_RADIUS - entity.radius);
+            }
+            for (const ob of obstacles) {
+                const dx = entity.x - ob.x;
+                const dz = entity.z - ob.z;
+                const dist = Math.hypot(dx, dz);
+                const minDist = entity.radius + ob.r;
+                if (dist < minDist && dist > 0.0001) {
+                    const overlap = minDist - dist;
+                    entity.x += (dx / dist) * overlap;
+                    entity.z += (dz / dist) * overlap;
+                }
+            }
+        }
+
+        /***********************************************************************
+         * 8. MULTI-TOUCH MOBILE CONTROLS (True Independent Dual-Thumb Tracking)
+         ***********************************************************************/
+        const keys = { up: false, down: false, left: false, right: false, dash: false, jump: false };
+        const joystickInput = { x: 0, y: 0, active: false, touchId: null };
+
+        window.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            if (k === 'w' || e.key === 'ArrowUp') keys.up = true;
+            if (k === 's' || e.key === 'ArrowDown') keys.down = true;
+            if (k === 'a' || e.key === 'ArrowLeft') keys.left = true;
+            if (k === 'd' || e.key === 'ArrowRight') keys.right = true;
+            if (e.key === 'Shift') keys.dash = true;
+            if (e.code === 'Space') {
+                keys.jump = true;
+                triggerJump();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            if (k === 'w' || e.key === 'ArrowUp') keys.up = false;
+            if (k === 's' || e.key === 'ArrowDown') keys.down = false;
+            if (k === 'a' || e.key === 'ArrowLeft') keys.left = false;
+            if (k === 'd' || e.key === 'ArrowRight') keys.right = false;
+            if (e.key === 'Shift') keys.dash = false;
+            if (e.code === 'Space') keys.jump = false;
+        });
+
+        function triggerJump() {
+            if (currentState === GAME_STATE.CHASE && playerPhys.onGround) {
+                playerPhys.vy = 8.0;
+                playerPhys.onGround = false;
+                audio.playJump();
+            }
+        }
+
+        const joystickZone = document.getElementById('joystick-zone');
+        const joystickKnob = document.getElementById('joystick-knob');
+
+        function updateJoystickFromPoint(clientX, clientY) {
+            const rect = joystickZone.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const maxRadius = rect.width * 0.36;
+
+            let dx = clientX - centerX;
+            let dy = clientY - centerY;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > maxRadius) {
+                dx = (dx / dist) * maxRadius;
+                dy = (dy / dist) * maxRadius;
+            }
+
+            joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+            joystickInput.x = dx / maxRadius;
+            joystickInput.y = dy / maxRadius;
+        }
+
+        function resetJoystick() {
+            joystickInput.active = false;
+            joystickInput.touchId = null;
+            joystickInput.x = 0;
+            joystickInput.y = 0;
+            joystickKnob.style.transform = `translate(0px, 0px)`;
+        }
+
+        // Dedicated Multi-Touch Listeners for Left Thumbstick
+        joystickZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const t = e.changedTouches[0];
+            joystickInput.active = true;
+            joystickInput.touchId = t.identifier;
+            updateJoystickFromPoint(t.clientX, t.clientY);
+        }, { passive: false });
+
+        joystickZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === joystickInput.touchId) {
+                    updateJoystickFromPoint(t.clientX, t.clientY);
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        joystickZone.addEventListener('touchend', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joystickInput.touchId) {
+                    resetJoystick();
+                    break;
+                }
+            }
+        });
+        joystickZone.addEventListener('touchcancel', resetJoystick);
+
+        // Desktop Mouse Fallback on Joystick
+        joystickZone.addEventListener('mousedown', (e) => {
+            joystickInput.active = true;
+            updateJoystickFromPoint(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (joystickInput.active && joystickInput.touchId === null) {
+                updateJoystickFromPoint(e.clientX, e.clientY);
+            }
+        });
+        window.addEventListener('mouseup', () => {
+            if (joystickInput.touchId === null) resetJoystick();
+        });
+
+        // Right Thumb Arcade Buttons (Multi-Touch Safe)
+        const btnMobileDash = document.getElementById('btn-mobile-dash');
+        const btnMobileJump = document.getElementById('btn-mobile-jump');
+
+        btnMobileDash.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.dash = true;
+            btnMobileDash.classList.add('arcade-btn-active');
+        }, { passive: false });
+        btnMobileDash.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.dash = false;
+            btnMobileDash.classList.remove('arcade-btn-active');
+        }, { passive: false });
+        btnMobileDash.addEventListener('mousedown', () => {
+            keys.dash = true;
+            btnMobileDash.classList.add('arcade-btn-active');
+        });
+        btnMobileDash.addEventListener('mouseup', () => {
+            keys.dash = false;
+            btnMobileDash.classList.remove('arcade-btn-active');
+        });
+
+        btnMobileJump.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            btnMobileJump.classList.add('arcade-btn-active');
+            triggerJump();
+        }, { passive: false });
+        btnMobileJump.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            btnMobileJump.classList.remove('arcade-btn-active');
+        }, { passive: false });
+        btnMobileJump.addEventListener('mousedown', () => {
+            btnMobileJump.classList.add('arcade-btn-active');
+            triggerJump();
+        });
+        btnMobileJump.addEventListener('mouseup', () => {
+            btnMobileJump.classList.remove('arcade-btn-active');
+        });
+
+        // Camera Swipe / Drag on 3D Canvas
+        let isDraggingCamera = false;
+        let prevPointerX = 0;
+        canvas.addEventListener('pointerdown', (e) => {
+            isDraggingCamera = true;
+            prevPointerX = e.clientX;
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (!isDraggingCamera) return;
+            const deltaX = e.clientX - prevPointerX;
+            prevPointerX = e.clientX;
+            cameraAzimuth -= deltaX * 0.0055;
+        });
+        window.addEventListener('pointerup', () => {
+            isDraggingCamera = false;
+        });
+
+        /***********************************************************************
+         * 9. ANIME PROPOSAL CUTSCENE & VISUAL NOVEL CINEMATICS
+         ***********************************************************************/
+        const CUTSCENE_SCRIPT = [
+            {
+                speaker: "🤵 Priyanshu",
+                badgeClass: "from-blue-600 to-indigo-600",
+                stageTitle: "Caught Her! Heartbeat Racing...",
+                text: "\"Gotcha, Ria! You finally let me catch up to you... My heart is beating even faster than my footsteps right now.\"",
+                btnText: "Look into her eyes 👀💖",
+                action: "STEP_CLOSER"
+            },
+            {
+                speaker: "💃 Ria",
+                badgeClass: "from-pink-500 to-rose-600",
+                stageTitle: "Playful Anime Teasing...",
+                text: "\"Hehe, took you long enough, Mr. Romeo! 😜 I almost thought I'd have to slow down even more! So... why were you chasing me through the cherry blossoms so desperately?\"",
+                btnText: "Kneel on One Knee & Present the Ring 💍",
+                action: "KNEEL_PROPOSE"
+            },
+            {
+                speaker: "🤵 Priyanshu (Kneeling with Diamond Ring 💍)",
+                badgeClass: "from-blue-600 to-indigo-600",
+                stageTitle: "The Kneeling Confession 💍✨",
+                text: "\"Because every single moment with you feels like an anime dream, Ria. Even when you tease me and make me chase you, there's nobody else in this world I want by my side. Will you be mine forever?\"",
+                btnText: "Watch Ria's Reaction 💓",
+                action: "RIA_TEASE_PAUSE"
+            },
+            {
+                speaker: "💃 Ria (Blushing Deeply & Teasing 😉)",
+                badgeClass: "from-pink-500 to-rose-600",
+                stageTitle: "One Last Playful Tease...",
+                text: "\"Hmm, let me think... a lifetime of teasing you, stealing your jackets, and making you chase me when I want hugs? Are you 100% sure you can handle me forever, Priyanshu? 😉🌸\"",
+                btnText: "\"Every single day, forever and always!\" 💖",
+                action: "RIA_ACCEPTS"
+            },
+            {
+                speaker: "💃 Ria (Tears of Joy & Acceptance 💖)",
+                badgeClass: "from-rose-500 to-amber-500",
+                stageTitle: "She Said YES!! 💍🥂",
+                text: "\"YES! A thousand times YES, Priyanshu! 💍😭💖 I only ran so I could see you chase me—because my heart has belonged to you from the very beginning! I love you too!\"",
+                btnText: "Celebrate Together! 🎉💖",
+                action: "FINISH_PROPOSAL"
+            }
+        ];
+
+        let currentDialogueIdx = 0;
+
+        function startProposalCutscene() {
+            if (currentState === GAME_STATE.CUTSCENE || currentState === GAME_STATE.CELEBRATION) return;
+            currentState = GAME_STATE.CUTSCENE;
+            currentDialogueIdx = 0;
+            cutsceneFocusMode = 'PAIR';
+
+            audio.playProposalChord();
+
+            document.getElementById('hud-overlay').classList.add('hidden');
+            document.getElementById('mobile-controls').classList.add('hidden');
+            document.getElementById('ria-bubble').classList.add('hidden');
+            const cutsceneOverlay = document.getElementById('cutscene-overlay');
+            cutsceneOverlay.classList.remove('hidden');
+            cutsceneOverlay.classList.add('flex');
+
+            playerPhys.vx = playerPhys.vz = playerPhys.vy = 0;
+            riaPhys.vx = riaPhys.vz = 0;
+            playerPhys.y = 0;
+            riaPhys.y = 0;
+
+            // Place Priyanshu & Ria facing each other closely
+            const midX = (playerPhys.x + riaPhys.x) * 0.5;
+            const midZ = (playerPhys.z + riaPhys.z) * 0.5;
+            playerPhys.x = midX - 0.95;
+            playerPhys.z = midZ + 0.3;
+            riaPhys.x = midX + 0.95;
+            riaPhys.z = midZ - 0.3;
+
+            playerPhys.yaw = Math.atan2(riaPhys.x - playerPhys.x, riaPhys.z - playerPhys.z);
+            riaPhys.yaw = Math.atan2(playerPhys.x - riaPhys.x, playerPhys.z - riaPhys.z);
+
+            resetCharacterLimbs();
+            updateCharacterTransforms();
+            emitHeartBurst(midX, 2.2, midZ, 18);
+            renderDialogueStep();
+        }
+
+        function renderDialogueStep() {
+            const step = CUTSCENE_SCRIPT[currentDialogueIdx];
+            const speakerEl = document.getElementById('dialogue-speaker');
+            speakerEl.textContent = step.speaker;
+            speakerEl.className = `inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r ${step.badgeClass} text-white font-game text-xs md:text-sm shadow-md -mt-7 mb-2 border border-white/40`;
+
+            document.getElementById('cutscene-stage-title').textContent = step.stageTitle;
+            document.getElementById('dialogue-text').textContent = step.text;
+            document.getElementById('btn-dialogue-next').innerHTML = `<span>${step.btnText}</span>`;
+
+            const midX = (playerPhys.x + riaPhys.x) * 0.5;
+            const midZ = (playerPhys.z + riaPhys.z) * 0.5;
+
+            if (step.action === "STEP_CLOSER") {
+                priyanshu.face.setState('happy', false);
+                ria.face.setState('tease', false);
+                cutsceneFocusMode = 'PAIR';
+            } else if (step.action === "KNEEL_PROPOSE") {
+                // Full Multi-Joint Kneeling Pose on One Knee!
+                priyanshu.bodyPivot.position.y = -0.48;
+                priyanshu.bodyPivot.rotation.x = 0.08;
+                // Left leg steps forward bent at 90 degrees
+                priyanshu.leftLeg.hipPivot.position.y = 0.66;
+                priyanshu.leftLeg.hipPivot.rotation.x = -1.35;
+                priyanshu.leftLeg.kneePivot.rotation.x = 1.35;
+                // Right leg kneels back on the ground
+                priyanshu.rightLeg.hipPivot.position.y = 0.66;
+                priyanshu.rightLeg.hipPivot.rotation.x = 0.45;
+                priyanshu.rightLeg.kneePivot.rotation.x = 1.45;
+
+                // Both arms reach forward presenting the velvet diamond ring box
+                priyanshu.rightArm.shoulderPivot.rotation.x = -1.15;
+                priyanshu.rightArm.elbowPivot.rotation.x = -0.45;
+                priyanshu.leftArm.shoulderPivot.rotation.x = -1.0;
+                priyanshu.leftArm.shoulderPivot.rotation.z = -0.25;
+                priyanshu.leftArm.elbowPivot.rotation.x = -0.45;
+                priyanshu.ringBoxGroup.visible = true;
+                priyanshu.headGroup.rotation.x = -0.22; // Looking up lovingly at Ria
+                priyanshu.face.setState('blush', false);
+
+                // Ria gasps and brings both hands to her blushing cheeks!
+                ria.face.setState('surprised', false);
+                ria.leftArm.shoulderPivot.rotation.x = -1.35;
+                ria.leftArm.shoulderPivot.rotation.z = -0.35;
+                ria.leftArm.elbowPivot.rotation.x = -1.45;
+                ria.rightArm.shoulderPivot.rotation.x = -1.35;
+                ria.rightArm.shoulderPivot.rotation.z = 0.35;
+                ria.rightArm.elbowPivot.rotation.x = -1.45;
+
+                cutsceneFocusMode = 'PRIYANSHU_KNEEL';
+                audio.playProposalChord();
+                emitHeartBurst(midX, 2.0, midZ, 24);
+            } else if (step.action === "RIA_TEASE_PAUSE") {
+                audio.playGiggleBubble();
+                ria.face.setState('blush', false);
+                ria.headGroup.rotation.z = 0.16;
+                cutsceneFocusMode = 'RIA_BLUSH';
+            } else if (step.action === "RIA_ACCEPTS") {
+                ria.headGroup.rotation.z = 0;
+                ria.face.setState('love', false);
+                priyanshu.face.setState('love', false);
+                // Ria extends her arms forward joyfully to accept the ring
+                ria.leftArm.shoulderPivot.rotation.x = -1.05;
+                ria.leftArm.shoulderPivot.rotation.z = 0.1;
+                ria.leftArm.elbowPivot.rotation.x = -0.35;
+                ria.rightArm.shoulderPivot.rotation.x = -1.05;
+                ria.rightArm.shoulderPivot.rotation.z = -0.1;
+                ria.rightArm.elbowPivot.rotation.x = -0.35;
+
+                cutsceneFocusMode = 'PAIR';
+                audio.playCelebrationFanfare();
+                emitHeartBurst(midX, 2.5, midZ, 40);
+            }
+        }
+
+        document.getElementById('btn-dialogue-next').addEventListener('click', () => {
+            currentDialogueIdx++;
+            if (currentDialogueIdx < CUTSCENE_SCRIPT.length) {
+                renderDialogueStep();
+            } else {
+                currentState = GAME_STATE.CELEBRATION;
+                cutsceneFocusMode = 'CELEBRATE';
+
+                // Priyanshu stands up and they hold hands together
+                resetCharacterLimbs();
+                priyanshu.face.setState('love', false);
+                ria.face.setState('love', false);
+                priyanshu.ringBoxGroup.visible = true;
+                priyanshu.rightArm.shoulderPivot.rotation.x = -0.95;
+                priyanshu.leftArm.shoulderPivot.rotation.x = -0.95;
+                ria.rightArm.shoulderPivot.rotation.x = -0.95;
+                ria.leftArm.shoulderPivot.rotation.x = -0.95;
+
+                const midX = (playerPhys.x + riaPhys.x) * 0.5;
+                const midZ = (playerPhys.z + riaPhys.z) * 0.5;
+                emitHeartBurst(midX, 2.8, midZ, 55);
+                audio.playCelebrationFanfare();
+
+                document.getElementById('victory-card').classList.remove('hidden');
+                document.getElementById('btn-replay-top').classList.remove('hidden');
+            }
+        });
+
+        /***********************************************************************
+         * 10. UI EVENT LISTENERS
+         ***********************************************************************/
+        function beginChaseGameplay() {
+            audio.init();
+            resetGamePositions();
+            currentState = GAME_STATE.CHASE;
+
+            document.getElementById('intro-modal').classList.add('hidden');
+            document.getElementById('victory-card').classList.add('hidden');
+            document.getElementById('cutscene-overlay').classList.add('hidden');
+            document.getElementById('cutscene-overlay').classList.remove('flex');
+            document.getElementById('btn-replay-top').classList.add('hidden');
+
+            const hud = document.getElementById('hud-overlay');
+            hud.classList.remove('hidden');
+            hud.classList.add('flex');
+
+            document.getElementById('mobile-controls').classList.remove('hidden');
+            document.getElementById('ria-bubble').classList.remove('hidden');
+
+            triggerRiaTease("Hehe, catch me if you want to put that diamond ring on my finger, Priyanshu! 💍😜");
+        }
+
+        document.getElementById('btn-start-game').addEventListener('click', beginChaseGameplay);
+        document.getElementById('btn-start-landscape').addEventListener('click', () => {
+            requestLandscapeFullscreen();
+            beginChaseGameplay();
+        });
+        document.getElementById('btn-play-again').addEventListener('click', beginChaseGameplay);
+        document.getElementById('btn-replay-top').addEventListener('click', beginChaseGameplay);
+
+        document.getElementById('btn-admire-scene').addEventListener('click', () => {
+            document.getElementById('victory-card').classList.add('hidden');
+        });
+
+        document.getElementById('btn-instant-propose').addEventListener('click', () => {
+            startProposalCutscene();
+        });
+
+        const btnAudioToggle = document.getElementById('btn-audio-toggle');
+        btnAudioToggle.addEventListener('click', () => {
+            audio.enabled = !audio.enabled;
+            btnAudioToggle.textContent = audio.enabled ? '🔊' : '🔇';
+        });
+
+        /***********************************************************************
+         * 11. MAIN PHYSICS, ARTICULATED ANIME ANIMATION & RENDER LOOP
+         ***********************************************************************/
+        function updateCharacterTransforms() {
+            priyanshu.mesh.position.set(playerPhys.x, playerPhys.y, playerPhys.z);
+            priyanshu.mesh.rotation.y = playerPhys.yaw;
+
+            ria.mesh.position.set(riaPhys.x, riaPhys.y, riaPhys.z);
+            ria.mesh.rotation.y = riaPhys.yaw;
+        }
+
+        function update2DLabels() {
+            const updateSingleLabel = (worldPos, elementId, yOffset) => {
+                const el = document.getElementById(elementId);
+                const pos = worldPos.clone();
+                pos.y += yOffset;
+                pos.project(camera);
+
+                if (pos.z > 1) {
+                    el.style.opacity = '0';
+                    return;
+                }
+                const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-(pos.y * 0.5) + 0.5) * window.innerHeight;
+                el.style.opacity = '1';
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+            };
+
+            updateSingleLabel(priyanshu.mesh.position, 'label-priyanshu', 3.35);
+            updateSingleLabel(ria.mesh.position, 'label-ria', 3.25);
+        }
+
+        let lastTime = performance.now();
+
+        function gameLoop(now) {
+            requestAnimationFrame(gameLoop);
+
+            const dt = Math.min((now - lastTime) / 1000, 0.05);
+            lastTime = now;
+
+            // Automatic Anime Eye Blinking Cycle
+            blinkTimer += dt;
+            const isBlinkingNow = (blinkTimer % 3.6) > 3.44;
+            priyanshu.face.setState(priyanshu.face.expression, isBlinkingNow);
+            ria.face.setState(ria.face.expression, isBlinkingNow);
+
+            // Rotate Sparkling Diamond
+            priyanshu.diamond.rotation.y += dt * 3.8;
+
+            // Falling Sakura Petals
+            const posAttr = petalGeo.attributes.position;
+            for (let i = 0; i < PETAL_COUNT; i++) {
+                let px = posAttr.getX(i) + petalSpeeds[i].vx * dt;
+                let py = posAttr.getY(i) - petalSpeeds[i].vy * dt;
+                let pz = posAttr.getZ(i) + petalSpeeds[i].vz * dt;
+                if (py < 0) {
+                    py = 24;
+                    px = (Math.random() - 0.5) * 85;
+                    pz = (Math.random() - 0.5) * 85;
+                }
+                posAttr.setXYZ(i, px, py, pz);
+            }
+            posAttr.needsUpdate = true;
+
+            // 3D Heart Burst Particles
+            for (let i = burstHearts.length - 1; i >= 0; i--) {
+                const b = burstHearts[i];
+                b.life -= dt;
+                if (b.life <= 0) {
+                    scene.remove(b.mesh);
+                    burstHearts.splice(i, 1);
+                    continue;
+                }
+                b.mesh.position.x += b.vx * dt;
+                b.mesh.position.y += b.vy * dt;
+                b.mesh.position.z += b.vz * dt;
+                b.vy -= 4.5 * dt;
+                b.mesh.rotation.y += 4 * dt;
+                const s = Math.max(0.01, b.life * 0.35);
+                b.mesh.scale.set(s, s, s);
+            }
+
+            // Collectible Love Hearts
+            loveHearts.forEach((h) => {
+                h.phase += dt * 3;
+                h.mesh.rotation.y += dt * 2.2;
+                h.mesh.position.y = 1.05 + Math.sin(h.phase) * 0.22;
+            });
+
+            if (currentState === GAME_STATE.CHASE) {
+                updateChaseGameplay(dt, now * 0.001);
+            } else if (currentState === GAME_STATE.CUTSCENE || currentState === GAME_STATE.CELEBRATION) {
+                updateCutsceneCamera(dt, now * 0.001);
+            } else if (currentState === GAME_STATE.INTRO) {
+                cutsceneCameraAngle += dt * 0.25;
+                camera.position.set(
+                    Math.sin(cutsceneCameraAngle) * 16,
+                    6.8,
+                    Math.cos(cutsceneCameraAngle) * 16
+                );
+                camera.lookAt(0, 2, 0);
+            }
+
+            update2DLabels();
+            renderer.render(scene, camera);
+        }
+
+        function updateChaseGameplay(dt, elapsed) {
+            let inputX = 0;
+            let inputZ = 0;
+            if (keys.left) inputX -= 1;
+            if (keys.right) inputX += 1;
+            if (keys.up) inputZ -= 1;
+            if (keys.down) inputZ += 1;
+
+            if (joystickInput.active) {
+                inputX = joystickInput.x;
+                inputZ = joystickInput.y;
+            }
+
+            const inputLen = Math.hypot(inputX, inputZ);
+            if (inputLen > 1) {
+                inputX /= inputLen;
+                inputZ /= inputLen;
+            }
+
+            // Dash & Stamina
+            const isDashing = keys.dash && playerPhys.stamina > 5 && inputLen > 0.1;
+            if (isDashing) {
+                playerPhys.stamina = Math.max(0, playerPhys.stamina - 32 * dt);
+                priyanshu.ringBoxGroup.visible = true;
+                priyanshu.face.setState('blush', priyanshu.face.isBlinking);
+                if (Math.random() < 0.38) {
+                    emitHeartBurst(playerPhys.x, playerPhys.y + 1.0, playerPhys.z, 1);
+                }
+            } else {
+                playerPhys.stamina = Math.min(100, playerPhys.stamina + 24 * dt);
+                priyanshu.ringBoxGroup.visible = false;
+                priyanshu.face.setState('happy', priyanshu.face.isBlinking);
+            }
+
+            const targetSpeed = isDashing ? playerPhys.dashSpeed : playerPhys.baseSpeed;
+            const sinCam = Math.sin(cameraAzimuth);
+            const cosCam = Math.cos(cameraAzimuth);
+            const moveX = inputX * cosCam + inputZ * sinCam;
+            const moveZ = -inputX * sinCam + inputZ * cosCam;
+
+            const accel = 11.5;
+            playerPhys.vx += (moveX * targetSpeed - playerPhys.vx) * Math.min(1, accel * dt);
+            playerPhys.vz += (moveZ * targetSpeed - playerPhys.vz) * Math.min(1, accel * dt);
+
+            playerPhys.x += playerPhys.vx * dt;
+            playerPhys.z += playerPhys.vz * dt;
+
+            // Vertical Jump & Gravity
+            playerPhys.y += playerPhys.vy * dt;
+            if (!playerPhys.onGround) {
+                playerPhys.vy -= 20.0 * dt;
+                if (playerPhys.y <= 0) {
+                    playerPhys.y = 0;
+                    playerPhys.vy = 0;
+                    playerPhys.onGround = true;
+                }
+            }
+
+            resolveObstacleCollisions(playerPhys);
+
+            // Articulated Multi-Joint Run & Idle Animation for Priyanshu
+            const horizSpeed = Math.hypot(playerPhys.vx, playerPhys.vz);
+            if (horizSpeed > 0.35) {
+                const targetYaw = Math.atan2(playerPhys.vx, playerPhys.vz);
+                let diff = targetYaw - playerPhys.yaw;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                playerPhys.yaw += diff * Math.min(1, 12 * dt);
+
+                playerPhys.animTime += horizSpeed * dt * 1.5;
+                const phase = playerPhys.animTime;
+                const legSwing = Math.sin(phase) * 0.85;
+
+                // Forward anime sprint torso lean + vertical stride bounce
+                priyanshu.bodyPivot.rotation.x = isDashing ? 0.24 : 0.12;
+                priyanshu.bodyPivot.rotation.z = -diff * 0.18;
+                priyanshu.bodyPivot.position.y = Math.abs(Math.cos(phase)) * 0.09;
+                priyanshu.hairGroup.rotation.x = -0.06 + Math.sin(phase * 2) * 0.05;
+
+                // Hips & Knees (Knee bends naturally when leg swings backward/up)
+                priyanshu.leftLeg.hipPivot.rotation.x = legSwing;
+                priyanshu.leftLeg.kneePivot.rotation.x = Math.max(0, -legSwing * 1.25 + 0.25);
+                priyanshu.rightLeg.hipPivot.rotation.x = -legSwing;
+                priyanshu.rightLeg.kneePivot.rotation.x = Math.max(0, legSwing * 1.25 + 0.25);
+
+                // Shoulders & Elbows
+                priyanshu.leftArm.shoulderPivot.rotation.x = -legSwing * 0.85;
+                priyanshu.leftArm.elbowPivot.rotation.x = -0.65 - Math.max(0, -legSwing * 0.4);
+                priyanshu.rightArm.shoulderPivot.rotation.x = isDashing ? -1.05 : legSwing * 0.85;
+                priyanshu.rightArm.elbowPivot.rotation.x = isDashing ? -0.45 : (-0.65 - Math.max(0, legSwing * 0.4));
+            } else {
+                // Smooth Idle Breathing Pose
+                priyanshu.bodyPivot.rotation.x *= 0.85;
+                priyanshu.bodyPivot.rotation.z *= 0.85;
+                priyanshu.bodyPivot.position.y = Math.sin(elapsed * 3) * 0.03;
+                priyanshu.leftLeg.hipPivot.rotation.x *= 0.82;
+                priyanshu.leftLeg.kneePivot.rotation.x *= 0.82;
+                priyanshu.rightLeg.hipPivot.rotation.x *= 0.82;
+                priyanshu.rightLeg.kneePivot.rotation.x *= 0.82;
+                priyanshu.leftArm.shoulderPivot.rotation.x *= 0.82;
+                priyanshu.leftArm.elbowPivot.rotation.x *= 0.82;
+                priyanshu.rightArm.shoulderPivot.rotation.x *= 0.82;
+                priyanshu.rightArm.elbowPivot.rotation.x *= 0.82;
+            }
+
+            // Collect Love Hearts
+            loveHearts.forEach((h) => {
+                const distToHeart = Math.hypot(playerPhys.x - h.group.position.x, playerPhys.z - h.group.position.z);
+                if (distToHeart < 1.65) {
+                    heartsCollected++;
+                    document.getElementById('hud-hearts').textContent = heartsCollected;
+                    playerPhys.stamina = Math.min(100, playerPhys.stamina + 35);
+                    catchProgress = Math.min(100, catchProgress + 11);
+
+                    audio.playHeartPickup();
+                    emitHeartBurst(h.group.position.x, 1.3, h.group.position.z, 8);
+                    placeHeartRandomly(h.group);
+
+                    if (heartsCollected % 2 === 0) {
+                        triggerRiaTease("Ooh, collecting Love Hearts for me, Priyanshu? Keep coming! 🌹😍");
+                    }
+                }
+            });
+
+            // Ria Intelligent Teasing & Steering AI
+            const dxPR = riaPhys.x - playerPhys.x;
+            const dzPR = riaPhys.z - playerPhys.z;
+            const distBetween = Math.hypot(dxPR, dzPR);
+
+            riaPhys.teaseTimer -= dt;
+            if (riaPhys.teaseTimer <= 0) {
+                triggerRiaTease();
+                riaPhys.teaseTimer = 4.2 + Math.random() * 2.5;
+            }
+
+            let desiredVx = 0;
+            let desiredVz = 0;
+
+            if (distBetween > 17.5) {
+                // Ria stops, looks back, winks & waves playfully at Priyanshu!
+                riaPhys.isWaitingTease = true;
+                ria.face.setState('tease', ria.face.isBlinking);
+
+                const facePlayerYaw = Math.atan2(-dxPR, -dzPR);
+                let diff = facePlayerYaw - riaPhys.yaw;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                riaPhys.yaw += diff * Math.min(1, 8 * dt);
+
+                riaPhys.animTime += dt * 7.5;
+                ria.bodyPivot.rotation.x = 0;
+                ria.rightArm.shoulderPivot.rotation.x = -2.2;
+                ria.rightArm.elbowPivot.rotation.z = Math.sin(riaPhys.animTime) * 0.45;
+                ria.leftLeg.hipPivot.rotation.x *= 0.85;
+                ria.leftLeg.kneePivot.rotation.x *= 0.85;
+                ria.rightLeg.hipPivot.rotation.x *= 0.85;
+                ria.rightLeg.kneePivot.rotation.x *= 0.85;
+            } else {
+                riaPhys.isWaitingTease = false;
+                ria.rightArm.elbowPivot.rotation.z = 0;
+                ria.face.setState(distBetween < 5.5 ? 'blush' : 'happy', ria.face.isBlinking);
+
+                const fleeX = dxPR / (distBetween || 1);
+                const fleeZ = dzPR / (distBetween || 1);
+                const distCenter = Math.hypot(riaPhys.x, riaPhys.z) || 1;
+                const tangX = -riaPhys.z / distCenter;
+                const tangZ = riaPhys.x / distCenter;
+
+                const boundaryPull = distCenter > WORLD_RADIUS * 0.65 ? -0.85 : 0.0;
+                const pullX = (riaPhys.x / distCenter) * boundaryPull;
+                const pullZ = (riaPhys.z / distCenter) * boundaryPull;
+
+                let avoidX = 0, avoidZ = 0;
+                for (const ob of obstacles) {
+                    const odx = riaPhys.x - ob.x;
+                    const odz = riaPhys.z - ob.z;
+                    const odist = Math.hypot(odx, odz);
+                    const safeR = ob.r + 3.2;
+                    if (odist < safeR && odist > 0.01) {
+                        const strength = (safeR - odist) / safeR;
+                        avoidX += (odx / odist) * strength * 2.2;
+                        avoidZ += (odz / odist) * strength * 2.2;
+                    }
+                }
+
+                let steerX = fleeX * 1.1 + tangX * 0.65 + pullX + avoidX;
+                let steerZ = fleeZ * 1.1 + tangZ * 0.65 + pullZ + avoidZ;
+                const steerLen = Math.hypot(steerX, steerZ) || 1;
+                steerX /= steerLen;
+                steerZ /= steerLen;
+
+                const dynamicRiaSpeed = riaPhys.speed * (catchProgress > 75 ? 0.87 : 0.95);
+                desiredVx = steerX * dynamicRiaSpeed;
+                desiredVz = steerZ * dynamicRiaSpeed;
+            }
+
+            riaPhys.vx += (desiredVx - riaPhys.vx) * Math.min(1, 7 * dt);
+            riaPhys.vz += (desiredVz - riaPhys.vz) * Math.min(1, 7 * dt);
+
+            riaPhys.x += riaPhys.vx * dt;
+            riaPhys.z += riaPhys.vz * dt;
+            resolveObstacleCollisions(riaPhys);
+
+            const riaSpd = Math.hypot(riaPhys.vx, riaPhys.vz);
+            if (riaSpd > 0.35 && !riaPhys.isWaitingTease) {
+                const targetYaw = Math.atan2(riaPhys.vx, riaPhys.vz);
+                let diff = targetYaw - riaPhys.yaw;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                riaPhys.yaw += diff * Math.min(1, 10 * dt);
+
+                riaPhys.animTime += riaSpd * dt * 1.65;
+                const phase = riaPhys.animTime;
+                const swing = Math.sin(phase) * 0.78;
+
+                ria.bodyPivot.rotation.x = 0.10;
+                ria.bodyPivot.position.y = Math.abs(Math.cos(phase)) * 0.08;
+                ria.skirtPivot.rotation.z = Math.sin(phase) * 0.08;
+
+                ria.leftLeg.hipPivot.rotation.x = swing;
+                ria.leftLeg.kneePivot.rotation.x = Math.max(0, -swing * 1.2 + 0.2);
+                ria.rightLeg.hipPivot.rotation.x = -swing;
+                ria.rightLeg.kneePivot.rotation.x = Math.max(0, swing * 1.2 + 0.2);
+
+                ria.leftArm.shoulderPivot.rotation.x = -swing * 0.75;
+                ria.leftArm.elbowPivot.rotation.x = -0.55;
+                ria.rightArm.shoulderPivot.rotation.x = swing * 0.75;
+                ria.rightArm.elbowPivot.rotation.x = -0.55;
+
+                // Bouncing Ponytail Physics
+                ria.ponytailPivot.rotation.x = Math.abs(Math.sin(phase)) * 0.35;
+                ria.ponytailPivot.rotation.z = Math.cos(phase) * 0.22;
+            }
+
+            updateCharacterTransforms();
+
+            // Update Proposal Meter
+            if (distBetween < 8.8) {
+                catchProgress = Math.min(100, catchProgress + (9.8 - distBetween) * 3.3 * dt);
+            }
+
+            document.getElementById('hud-distance').textContent = `${distBetween.toFixed(1)}m`;
+            document.getElementById('hud-catch-bar').style.width = `${Math.min(100, catchProgress)}%`;
+            document.getElementById('hud-stamina-bar').style.width = `${playerPhys.stamina}%`;
+            document.getElementById('hud-stamina-text').textContent = `${Math.round(playerPhys.stamina)}%`;
+
+            // Smooth Follow Camera
+            const camDist = 9.2;
+            const camHeight = 4.6;
+            const desiredCamX = playerPhys.x + Math.sin(cameraAzimuth) * camDist;
+            const desiredCamZ = playerPhys.z + Math.cos(cameraAzimuth) * camDist;
+
+            camera.position.x += (desiredCamX - camera.position.x) * Math.min(1, 8 * dt);
+            camera.position.z += (desiredCamZ - camera.position.z) * Math.min(1, 8 * dt);
+            camera.position.y += (playerPhys.y + camHeight - camera.position.y) * Math.min(1, 6 * dt);
+
+            const lookX = playerPhys.x * 0.75 + riaPhys.x * 0.25;
+            const lookZ = playerPhys.z * 0.75 + riaPhys.z * 0.25;
+            camera.lookAt(lookX, playerPhys.y + 1.85, lookZ);
+
+            if (distBetween < 2.3 || catchProgress >= 100) {
+                startProposalCutscene();
+            }
+        }
+
+        function updateCutsceneCamera(dt, elapsed) {
+            const midX = (playerPhys.x + riaPhys.x) * 0.5;
+            const midZ = (playerPhys.z + riaPhys.z) * 0.5;
+
+            // Subtle breathing during cutscene
+            ria.bodyPivot.position.y = Math.sin(elapsed * 3) * 0.025;
+
+            let targetCamX, targetCamY, targetCamZ;
+            let lookTargetX = midX, lookTargetY = 1.9, lookTargetZ = midZ;
+
+            if (cutsceneFocusMode === 'PRIYANSHU_KNEEL') {
+                // Dramatic Anime Close-up on Priyanshu kneeling with the diamond ring
+                targetCamX = midX + Math.sin(cameraAzimuth + 0.55) * 3.1;
+                targetCamZ = midZ + Math.cos(cameraAzimuth + 0.55) * 3.1;
+                targetCamY = 2.05;
+                lookTargetY = 1.75;
+            } else if (cutsceneFocusMode === 'RIA_BLUSH') {
+                // Close-up on Ria's blushing anime face
+                targetCamX = riaPhys.x - 1.4;
+                targetCamZ = riaPhys.z + 1.9;
+                targetCamY = 2.55;
+                lookTargetX = riaPhys.x;
+                lookTargetY = 2.35;
+                lookTargetZ = riaPhys.z;
+            } else {
+                cutsceneCameraAngle += dt * 0.32;
+                const orbitRadius = 4.2;
+                targetCamX = midX + Math.sin(cutsceneCameraAngle + cameraAzimuth) * orbitRadius;
+                targetCamZ = midZ + Math.cos(cutsceneCameraAngle + cameraAzimuth) * orbitRadius;
+                targetCamY = 2.4;
+            }
+
+            camera.position.x += (targetCamX - camera.position.x) * Math.min(1, 4.5 * dt);
+            camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, 4.5 * dt);
+            camera.position.y += (targetCamY - camera.position.y) * Math.min(1, 4.5 * dt);
+
+            camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
+
+            if (currentState === GAME_STATE.CELEBRATION && Math.random() < 0.09) {
+                emitHeartBurst(midX + (Math.random() - 0.5) * 3, 2.6, midZ + (Math.random() - 0.5) * 3, 3);
+            }
+        }
+
+        // Responsive Window Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.onload = function () {
+            resetGamePositions();
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>
